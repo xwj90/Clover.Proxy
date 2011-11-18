@@ -8,7 +8,7 @@ using System.Xml;
 namespace Clover.Proxy
 {
     [Serializable]
-    public class BaseWrapper<T> : MarshalByRefObject where T : IWrapper
+    public class BaseWrapper<T> : MarshalByRefObject //where T : IWrapper
     {
 
         private static Assembly EntityAssembly = null;
