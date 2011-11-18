@@ -24,15 +24,15 @@ namespace Sample.Remote {
         public Internal_Remote_TestWrapper() {
         }
         
-        public override List<global::Sample.TestEntity> GetAll() {
-
+        public override List<global::Sample.TestEntity> GetAll(int i, string s) {
 EventMonitor.BeforeCall(null);
+
 WindowsIdentity WindowsIdentity_1024 = WindowsIdentity.GetCurrent();
 try 
 {
 
 var temp_returnData_1024=
-            base.GetAll();
+            base.GetAll(i, s);
 return temp_returnData_1024;
 
 }

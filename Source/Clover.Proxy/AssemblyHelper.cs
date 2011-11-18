@@ -588,9 +588,15 @@ this.{0}= {1}; ", item.Name, SituationHelper.GetExpression(type, "value." + item
                     }
                     //write line
                     // method.Statements.Add(new CodeSnippetStatement(typeof(ServiceContext).Namespace + "." + typeof(ServiceContext).Name + ".SetThreadPrincipal();"));
+
+                    if (true)//if enable before call
+                    {
+                       // CodeMemberMethod beforeCallMethod = new CodeMemberMethod();
+                       //beforeCallMethod.Parameters=new CodeParameterDeclarationExpression(typeof(object[]),
+                        method.Statements.Add(new CodeSnippetStatement("EventMonitor.BeforeCall(null);"));
+                    }
                     method.Statements.Add(new CodeSnippetStatement(
 @"
-EventMonitor.BeforeCall(null);
 WindowsIdentity WindowsIdentity_1024 = WindowsIdentity.GetCurrent();
 try 
 {

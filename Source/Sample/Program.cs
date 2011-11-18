@@ -9,8 +9,12 @@ namespace Sample
     {
         static void Main(string[] args)
         {
-            var data = BaseWrapper<TestWrapper>.Proxy.GetAll();
-            Console.WriteLine(data.Count);
+            //  var s = __arglist(1, 2, 3);
+
+            var data = BaseWrapper<TestWrapper>.Proxy.GetAll(1, "a");
+            Console.WriteLine("Result:" + data.Count);
+
+            // Console.WriteLine(__arglist);
         }
     }
 
@@ -21,8 +25,9 @@ namespace Sample
     [Serializable]
     public class TestWrapper
     {
-        public virtual List<TestEntity> GetAll()
+        public virtual List<TestEntity> GetAll(int i, string s)
         {
+            Console.WriteLine("Calling");
             return new List<TestEntity>() { new TestEntity(), new TestEntity() };
         }
     }

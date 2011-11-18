@@ -22,9 +22,9 @@ namespace Sample.Local {
         public Internal_Local_TestWrapper() {
         }
         
-        public override List<global::Sample.TestEntity> GetAll() {
+        public override List<global::Sample.TestEntity> GetAll(int i, string s) {
 var temp_returnData_1024=
-            BaseWrapper<TestWrapper>.RemoteT.GetAll();
+            BaseWrapper<TestWrapper>.RemoteT.GetAll(i, s);
 return temp_returnData_1024;
         }
     }

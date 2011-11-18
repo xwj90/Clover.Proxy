@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using System;
 using System.Reflection;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ namespace Clover.Proxy
 {
 
 
-    public static  class EventMonitor
+    public static class EventMonitor
     {
         public static void BeforeCall(object[] args)
         {
@@ -16,7 +16,7 @@ namespace Clover.Proxy
         {
             Console.WriteLine("After Call");
             return null;
-        } 
+        }
     }
 
 }
