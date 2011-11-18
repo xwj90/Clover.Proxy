@@ -9,28 +9,21 @@ namespace Sample
     {
         static void Main(string[] args)
         {
-
+            var data = BaseWrapper<TestWrapper>.Proxy.GetAll();
+            Console.WriteLine(data.Count);
         }
     }
 
-    public class TestProvider  
-    {     
-
-        public IEnumerable<TestEntity> GetSports()
-        {
-
-            return BaseWrapper<TestWrapper>.Proxy.GetAll();
-
-        }
-    }
+    [Serializable]
     public class TestEntity
     {
     }
+    [Serializable]
     public class TestWrapper
     {
         public virtual List<TestEntity> GetAll()
         {
-            return new List<TestEntity>();
+            return new List<TestEntity>() { new TestEntity(), new TestEntity() };
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using System;
 using System.Reflection;
 using System.Collections.Generic;
@@ -10,23 +10,31 @@ using System.Text;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Configuration;
- 
+
 namespace Clover.Proxy
 {
 
     public class AssemblyHelper<T>
     {
-        public static string DllCachePath = System.Configuration.ConfigurationManager.AppSettings["AgileBetSdk.DllCachePath"];
+        public static string DllCachePath = ConfigurationManager.AppSettings["Clover.DllCachePath"];
 
-        public static bool EnableLogInputParameter = Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["AgileBetSdk.EnableLogInputParametersPassToInternalComponents"]);
+        public static bool EnableLogInputParameter = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.EnableLogInputParametersPassToInternalComponents"]);
 
-        public static bool EnableLogReturnValue = Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["AgileBetSdk.EnableLogReturnValueFromInternalComponents"]);
+        public static bool EnableLogReturnValue = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.EnableLogReturnValueFromInternalComponents"]);
 
 
         private static Type CurrentType = typeof(T);
         private static HashSet<Type> EntityTypes = new HashSet<Type>();
         private static HashSet<string> Namespaces = new HashSet<string>();
         private static Assembly InterfaceAssembly = typeof(IWrapper).Assembly;
+
+        static AssemblyHelper()
+        {
+            if (string.IsNullOrEmpty(DllCachePath))
+            {
+                DllCachePath = AppDomain.CurrentDomain.BaseDirectory;
+            }
+        }
 
 
         public static Assembly CreateEntityAssembly()
@@ -670,8 +678,8 @@ if(WindowsIdentity_1024!=null)
 WindowsIdentity_1024.Impersonate();
 }
 "));
-                    
-                    
+
+
                     wrapProxyClass.Members.Add(method);
                 }
             }
