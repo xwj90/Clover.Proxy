@@ -590,6 +590,7 @@ this.{0}= {1}; ", item.Name, SituationHelper.GetExpression(type, "value." + item
                     // method.Statements.Add(new CodeSnippetStatement(typeof(ServiceContext).Namespace + "." + typeof(ServiceContext).Name + ".SetThreadPrincipal();"));
                     method.Statements.Add(new CodeSnippetStatement(
 @"
+EventMonitor.BeforeCall(null);
 WindowsIdentity WindowsIdentity_1024 = WindowsIdentity.GetCurrent();
 try 
 {
@@ -676,6 +677,8 @@ finally
 {
 if(WindowsIdentity_1024!=null)
 WindowsIdentity_1024.Impersonate();
+
+EventMonitor.AfterCall();
 }
 "));
 

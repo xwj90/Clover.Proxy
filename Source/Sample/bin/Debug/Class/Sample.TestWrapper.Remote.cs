@@ -26,6 +26,7 @@ namespace Sample.Remote {
         
         public override List<global::Sample.TestEntity> GetAll() {
 
+EventMonitor.BeforeCall(null);
 WindowsIdentity WindowsIdentity_1024 = WindowsIdentity.GetCurrent();
 try 
 {
@@ -49,6 +50,8 @@ finally
 {
 if(WindowsIdentity_1024!=null)
 WindowsIdentity_1024.Impersonate();
+
+EventMonitor.AfterCall();
 }
 
         }
