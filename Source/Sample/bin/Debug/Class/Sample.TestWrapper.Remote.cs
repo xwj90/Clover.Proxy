@@ -15,6 +15,7 @@ namespace Sample.Remote {
     using System.Collections.Generic;
     using System.Security.Principal;
     using System.Threading;
+    using Clover.Proxy.OldDesign;
     using Clover.Proxy;
     
     

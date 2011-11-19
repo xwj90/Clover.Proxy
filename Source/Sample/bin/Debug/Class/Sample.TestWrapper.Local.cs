@@ -13,6 +13,7 @@ namespace Sample.Local {
     using System.Linq;
     using System.Collections;
     using System.Collections.Generic;
+    using Clover.Proxy.OldDesign;
     using Clover.Proxy;
     
     
