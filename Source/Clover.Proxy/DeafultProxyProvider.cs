@@ -18,11 +18,12 @@ namespace Clover.Proxy
         private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
         private readonly List<string> Namespaces = new List<string>();
         private Assembly ProxyAssembly;
-        private ProxyConfiguration config;
+       
 
-        public DefaultProxyProvider(ProxyConfiguration config)
+        public DefaultProxyProvider(ProxyConfiguration config):base(config)
         {
-            this.config = config;
+           
+            
         }
 
         public override T CreateInstance<T>()
@@ -38,18 +39,18 @@ namespace Clover.Proxy
 
         public Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
-            Type CurrentType = typeof(T);
-            string localClassName = TypeInformation.GetLocalProxyClassName(CurrentType);
+            Type currentType = typeof(T);
+            string localClassName = TypeInformation.GetLocalProxyClassName(currentType);
             // SituationHelper.GetLocalProxyClassName(CurrentType);
 
             var compunit = new CodeCompileUnit();
-            var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(CurrentType));
+            var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(currentType));
             compunit.Namespaces.Add(sample);
 
             sample.Imports.Add(new CodeNamespaceImport("System"));
             sample.Imports.Add(new CodeNamespaceImport("System.Linq"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections"));
-            sample.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
+            sample.Imports.Add(new CodeNamespaceImport("Systeym.Collections.Generic"));
             sample.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
             foreach (Type item in InterfaceAssembly.GetTypes())
             {
@@ -64,7 +65,7 @@ namespace Clover.Proxy
             // compunit.ReferencedAssemblies.Add(currentType.Assembly.FullName);
 
             var wrapProxyClass = new CodeTypeDeclaration(localClassName);
-            wrapProxyClass.BaseTypes.Add(CurrentType);
+            wrapProxyClass.BaseTypes.Add(currentType);
             wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
             sample.Types.Add(wrapProxyClass);
 
@@ -80,10 +81,10 @@ namespace Clover.Proxy
             wrapProxyClass.Members.Add(constructor);
 
 
-            foreach (MethodInfo item in CurrentType.GetMethods())
+            foreach (MethodInfo item in currentType.GetMethods())
             {
                 if (item.IsPublic && !item.IsStatic && item.IsVirtual &&
-                    !CurrentType.BaseType.GetMethods().Any(p => p.Name == item.Name))
+                    !currentType.BaseType.GetMethods().Any(p => p.Name == item.Name))
                 {
                     var method = new CodeMemberMethod();
                     method.Name = item.Name;
@@ -95,35 +96,7 @@ namespace Clover.Proxy
                         method.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
                     }
 
-                    bool enableLog = false;
-                    if (enableLog)
-                    {
-                        string code = "";
-                        foreach (ParameterInfo input in item.GetParameters())
-                        {
-                            Situation situcation = SituationHelper.GetSituation(input.ParameterType);
-
-                            if (input.ParameterType.IsClass)
-                            {
-                                code += Environment.NewLine + string.Format("if({0}!=null){{", input.Name);
-                                foreach (MemberInfo member in SituationHelper.GetMembers(input.ParameterType))
-                                {
-                                    code += Environment.NewLine +
-                                            string.Format("Clover.AgileBet.Logger.Current.WriteEntry({0}.{1});",
-                                                          input.Name, member.Name);
-                                }
-                                code += Environment.NewLine +
-                                        string.Format("}}else{{Clover.AgileBet.Logger.Current.WriteEntry({0});}}",
-                                                      input.Name);
-                            }
-                            else
-                            {
-                                code += Environment.NewLine +
-                                        string.Format("Clover.AgileBet.Logger.Current.WriteEntry({0});", input.Name);
-                            }
-                        }
-                        method.Statements.Add(new CodeSnippetStatement(code));
-                    }
+                    
                     if (this.BeforeCall != null)
                     {
                         method.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(null);"));
@@ -170,7 +143,7 @@ namespace Clover.Proxy
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(CurrentType.Assembly.Location));
+            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(currentType.Assembly.Location));
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
             //RefComponents(cp, EntityTypes);
             foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
@@ -181,14 +154,14 @@ namespace Clover.Proxy
             }
 
 
-            cp.OutputAssembly = DllCachePath + CurrentType.FullName + ".Local.dll";
+            cp.OutputAssembly = DllCachePath + currentType.FullName + ".Local.dll";
             cp.GenerateInMemory = false;
             cp.IncludeDebugInformation = true;
             cp.GenerateExecutable = false; //生成EXE,不是DLL 
             cp.WarningLevel = 4;
             cp.TreatWarningsAsErrors = false;
 
-            string filePath = DllCachePath + @"Class\" + CurrentType.Namespace + "." + CurrentType.Name + ".Local.cs";
+            string filePath = DllCachePath + @"Class\" + currentType.Namespace + "." + currentType.Name + ".Local.cs";
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.WriteAllText(filePath, fileContent.ToString());

@@ -31,7 +31,7 @@ namespace Clover.Proxy.OldDesign
         private static readonly string SuperAccountPassword;
         private static readonly int defaultBusinessUnitId;
         private static string DefaultBusinessUnitCode;
-        private static string THREAD_DATASLOT = "AgileBetThreadData";
+        //private static string THREAD_DATASLOT = "AgileBetThreadData";
 
         private static readonly ConcurrentDictionary<string, AuthenticatedUser> _Users =
             new ConcurrentDictionary<string, AuthenticatedUser>();

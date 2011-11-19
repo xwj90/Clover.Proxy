@@ -4,6 +4,14 @@ namespace Clover.Proxy
 {
     public class ProxyProviderBase
     {
+        private ProxyConfiguration config;
+
+        public ProxyProviderBase(ProxyConfiguration config)
+        {
+            this.config = config;
+            this.BeforeCall = config.BeforeCall;
+            this.AfterCall = config.AfterCall;
+        }
         #region IProxyProvider Members
 
         public Action<object[]> BeforeCall { get; set; }

@@ -1,0 +1,8 @@
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\bin\Debug\Sample.exe.config
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\bin\Debug\Sample.exe
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\bin\Debug\Sample.pdb
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\bin\Debug\Clover.Proxy.dll
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\bin\Debug\Clover.Proxy.pdb
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\obj\x86\Debug\ResolveAssemblyReference.cache
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\obj\x86\Debug\Sample.exe
+D:\My Document\MyServer\Clover.Proxy\Source\Sample\obj\x86\Debug\Sample.pdb

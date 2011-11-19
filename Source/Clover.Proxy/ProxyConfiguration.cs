@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Clover.Proxy
 {
@@ -8,5 +10,16 @@ namespace Clover.Proxy
         {
             return new ProxyConfiguration();
         }
+
+
+        public string DllCachedPath { get; set; }
+        public List<string> Namespaces { get; set; }
+        public Assembly InterfaceAssembly { get; set; }
+
+        public Action<object[]> BeforeCall { get; set; }
+        public Action AfterCall { get; set; }
+
+        public bool EnableCrossDomain { get; set; }
+        public bool EnableDebug { get; set; }
     }
 }
