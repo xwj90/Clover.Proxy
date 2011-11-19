@@ -20,12 +20,17 @@ namespace Sample.Local {
     [Serializable()]
     public class Internal_Local_TestWrapper : Sample.TestWrapper {
         
-        public Internal_Local_TestWrapper() {
+        private Clover.Proxy.ProxyProviderBase _proxyProviderBase;
+        
+        public Internal_Local_TestWrapper(Clover.Proxy.ProxyProviderBase _proxyProviderBase) {
+this._proxyProviderBase=_proxyProviderBase;
         }
         
         public override List<global::Sample.TestEntity> GetAll(int i, string s) {
+_proxyProviderBase.ExecuteBeforeCall(null);
 var temp_returnData_1024=
-            BaseWrapper<TestWrapper>.RemoteT.GetAll(i, s);
+            base.GetAll(i, s);
+_proxyProviderBase.AfterCall();
 return temp_returnData_1024;
         }
     }

@@ -4,8 +4,8 @@ namespace Clover.Proxy
 {
     public interface IProxyProvider
     {
-        event Action<object[]> BeforeCall;
-        event Action AfterCall;
+        Action<object[]> BeforeCall { get; set; }
+        Action AfterCall { get; set; }
         T CreateInstance<T>();
     }
 }

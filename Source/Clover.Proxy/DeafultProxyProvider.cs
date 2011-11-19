@@ -15,7 +15,7 @@ namespace Clover.Proxy
     internal class DefaultProxyProvider : ProxyProviderBase
     {
         private readonly string DllCachePath = AppDomain.CurrentDomain.BaseDirectory;
-        private readonly Assembly InterfaceAssembly = typeof (DefaultProxyProvider).Assembly;
+        private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
         private readonly List<string> Namespaces = new List<string>();
         private Assembly ProxyAssembly;
         private ProxyConfiguration config;
@@ -27,15 +27,18 @@ namespace Clover.Proxy
 
         public override T CreateInstance<T>()
         {
-            ProxyAssembly = CreateLocalAssembly<T>(typeof (T).Assembly);
+            ProxyAssembly = CreateLocalAssembly<T>(typeof(T).Assembly);
 
-            Type tempType = ProxyAssembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof (T)));
-            return (T) Activator.CreateInstance(tempType);
+            Type tempType = ProxyAssembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
+            return (T)Activator.CreateInstance(tempType,new Object[]
+            {
+                this
+            });
         }
 
         public Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
-            Type CurrentType = typeof (T);
+            Type CurrentType = typeof(T);
             string localClassName = TypeInformation.GetLocalProxyClassName(CurrentType);
             // SituationHelper.GetLocalProxyClassName(CurrentType);
 
@@ -47,7 +50,7 @@ namespace Clover.Proxy
             sample.Imports.Add(new CodeNamespaceImport("System.Linq"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
-            sample.Imports.Add(new CodeNamespaceImport(typeof (BaseWrapper<>).Namespace));
+            sample.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
             foreach (Type item in InterfaceAssembly.GetTypes())
             {
                 sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
@@ -65,8 +68,15 @@ namespace Clover.Proxy
             wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
             sample.Types.Add(wrapProxyClass);
 
+            var field = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
+            wrapProxyClass.Members.Add(field);
+            
+
+
             var constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
+            constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(ProxyProviderBase), "_proxyProviderBase"));
+            constructor.Statements.Add(new CodeSnippetStatement("this._proxyProviderBase=_proxyProviderBase;"));
             wrapProxyClass.Members.Add(constructor);
 
 
@@ -77,7 +87,7 @@ namespace Clover.Proxy
                 {
                     var method = new CodeMemberMethod();
                     method.Name = item.Name;
-                    if (item.ReturnType != typeof (void))
+                    if (item.ReturnType != typeof(void))
                         method.ReturnType = GetSimpleType(item.ReturnType);
                     //method.ReturnType = new CodeTypeReference(item.ReturnType);
                     foreach (ParameterInfo input in item.GetParameters())
@@ -85,9 +95,7 @@ namespace Clover.Proxy
                         method.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
                     }
 
-                    bool enableLog =
-                        Convert.ToBoolean(
-                            ConfigurationManager.AppSettings["Clover.EnableLogInputParametersPassToInternalComponents"]);
+                    bool enableLog = false;
                     if (enableLog)
                     {
                         string code = "";
@@ -116,25 +124,32 @@ namespace Clover.Proxy
                         }
                         method.Statements.Add(new CodeSnippetStatement(code));
                     }
+                    if (this.BeforeCall != null)
+                    {
+                        method.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(null);"));
+                    }
                     method.Attributes = MemberAttributes.Override | MemberAttributes.Public;
-                    if (item.ReturnType != typeof (void))
+                    if (item.ReturnType != typeof(void))
                     {
                         method.Statements.Add(new CodeSnippetStatement("var temp_returnData_1024="));
                     }
                     var cs = new CodeMethodInvokeExpression();
                     //bug
-                    cs.Method = new CodeMethodReferenceExpression
-                                    {MethodName = "BaseWrapper<" + CurrentType.Name + ">.RemoteT." + item.Name};
+                    cs.Method = new CodeMethodReferenceExpression { MethodName = "base." + item.Name };
                     foreach (ParameterInfo input in item.GetParameters())
                     {
                         Type t = input.ParameterType;
                         Situation situation = SituationHelper.GetSituation(t);
                         cs.Parameters.Add(new CodeSnippetExpression(input.Name));
-                        // cs.Parameters.Add(new CodeSnippetExpression(SituationHelper.GetExpression(t, input.Name)));
                     }
                     method.Statements.Add(cs);
 
-                    if (item.ReturnType != typeof (void))
+                    if (this.AfterCall != null)
+                    {
+                        method.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall();"));
+                    }
+
+                    if (item.ReturnType != typeof(void))
                     {
                         method.Statements.Add(new CodeSnippetStatement("return temp_returnData_1024;"));
                     }
@@ -154,7 +169,7 @@ namespace Clover.Proxy
             var cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof (ServiceContext).Assembly.Location));
+            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(CurrentType.Assembly.Location));
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
             //RefComponents(cp, EntityTypes);

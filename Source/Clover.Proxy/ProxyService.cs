@@ -5,36 +5,25 @@ namespace Clover.Proxy
 {
     public class ProxyService
     {
-        private readonly ConcurrentDictionary<Type, IProxyProvider> TypeConfigurations =
-            new ConcurrentDictionary<Type, IProxyProvider>();
+        private readonly ConcurrentDictionary<Type, ProxyProviderBase> TypeConfigurations =
+            new ConcurrentDictionary<Type, ProxyProviderBase>();
 
-        public event Action<object[]> BeforeCall;
-        public event Action AfterCall;
+        public Action<object[]> BeforeCall;
+        public Action AfterCall;
 
         public T Create<T>()
         {
-            Type t = typeof (T);
+            Type t = typeof(T);
 
-            IProxyProvider provider = TypeConfigurations.GetOrAdd(t,
+            ProxyProviderBase provider = TypeConfigurations.GetOrAdd(t,
                                                                   ProxyProviderFactory.CreateProvider(
                                                                       ProxyConfiguration.CreateByType(t)));
-            provider.BeforeCall += provider_BeforeCall;
+            provider.BeforeCall = BeforeCall;
+            provider.AfterCall = AfterCall;
 
-            return provider.CreateInstance<T>(); //we should return proxy class
+            return provider.CreateInstance<T>();
         }
 
-        private void provider_BeforeCall(object[] obj)
-        {
-            BeforeCall(obj);
-        }
 
-        //public static T Create<T>()
-        //{
-        //    Type t = typeof(T);
-
-        //    var provider = TypeConfigurations.GetOrAdd(t, ProxyProviderFactory.CreateProvider(ProxyConfiguration.CreateByType(t)));
-
-        //    return provider.CreateInstance<T>();//we should return proxy class
-        //}
     }
 }

@@ -57,7 +57,6 @@
     <Compile Include="RemoteDomainProxyProvider.cs" />
     <Compile Include="DeafultProxyProvider.cs" />
     <Compile Include="ProxyProviderBase.cs" />
-    <Compile Include="IProxyProvider.cs" />
     <Compile Include="OldDesign\AssemblyHelper.cs" />
     <Compile Include="OldDesign\BaseWrapper.cs" />
     <Compile Include="OldDesign\BinaryExtensions.cs" />

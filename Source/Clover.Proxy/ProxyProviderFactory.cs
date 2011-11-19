@@ -2,7 +2,7 @@
 {
     public class ProxyProviderFactory
     {
-        internal static IProxyProvider CreateProvider(ProxyConfiguration proxyConfiguration)
+        internal static ProxyProviderBase CreateProvider(ProxyConfiguration proxyConfiguration)
         {
             return new DefaultProxyProvider(proxyConfiguration);
         }
