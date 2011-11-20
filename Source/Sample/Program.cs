@@ -19,10 +19,12 @@ namespace Sample
             };
             service.AfterCall += (p) =>
             {
-                Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
+                Console.WriteLine("After Call");
+                if (p.ProxiedMethod.Name.IndexOf("Name") != -1)
+                    p.ReturnValue = 100;
             };
             var item = service.Create<TestWrapper>();
-               item.GetAll(1, "213");
+            item.GetAll(1, "213");
             item.Name = 5;
             item.Name1 = null;
             //  Console.WriteLine(item.Name);
