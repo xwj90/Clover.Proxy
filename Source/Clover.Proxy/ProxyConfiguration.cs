@@ -7,6 +7,9 @@ namespace Clover.Proxy
 {
     public class ProxyConfiguration
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public bool DisableAutoProxy { get; set; }
         public bool EnableDebug { get; set; }
         public bool EnableCrossDomain { get; set; }

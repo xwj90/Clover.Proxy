@@ -1,0 +1,41 @@
+<<<<<<< HEAD
+[Bb]in/
+[Oobj]/
+[Dd]ebug/
+[Rr]elease/
+*.dll
+=======
+
+>>>>>>> 0e4ef23bdc9f24db8d3720ab9e0db7219aa0f94f
+#ignore thumbnails created by windows
+Thumbs.db
+#Ignore files build by Visual Studio
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.lib
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+<<<<<<< HEAD
+[Tt]est[Rr]esult*
+=======
+[Tt]est[Rr]esult*
+>>>>>>> 0e4ef23bdc9f24db8d3720ab9e0db7219aa0f94f
