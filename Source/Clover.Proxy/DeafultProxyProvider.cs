@@ -49,12 +49,12 @@ namespace Clover.Proxy
 
         public Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
-            Type CurrentType = typeof(T);
-            string localClassName = TypeInformation.GetLocalProxyClassName(CurrentType);
+            Type currentType = typeof(T);
+            string localClassName = TypeInformation.GetLocalProxyClassName(currentType);
             // SituationHelper.GetLocalProxyClassName(CurrentType);
 
             var compunit = new CodeCompileUnit();
-            var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(CurrentType));
+            var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(currentType));
             compunit.Namespaces.Add(sample);
 
             sample.Imports.Add(new CodeNamespaceImport("System"));
@@ -75,23 +75,25 @@ namespace Clover.Proxy
             // compunit.ReferencedAssemblies.Add(currentType.Assembly.FullName);
 
             var wrapProxyClass = new CodeTypeDeclaration(localClassName);
-            wrapProxyClass.BaseTypes.Add(CurrentType);
+            wrapProxyClass.BaseTypes.Add(currentType);
             wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
             sample.Types.Add(wrapProxyClass);
 
-            var field = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
-            wrapProxyClass.Members.Add(field);
-
+            var baseField = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
+            wrapProxyClass.Members.Add(baseField);
+            var baseTypeField = new CodeMemberField(typeof(Type), "_proxyBaseType");
+            wrapProxyClass.Members.Add(baseTypeField);
 
 
             var constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(ProxyProviderBase), "_proxyProviderBase"));
             constructor.Statements.Add(new CodeSnippetStatement("this._proxyProviderBase=_proxyProviderBase;"));
+            constructor.Statements.Add(new CodeSnippetStatement(string.Format("this._proxyBaseType = Type.GetType(\"{0}\");", currentType.AssemblyQualifiedName)));
             wrapProxyClass.Members.Add(constructor);
 
-            OverrideMethods(CurrentType, wrapProxyClass);
-            OverrideProperties(CurrentType, wrapProxyClass);
+            OverrideMethods(currentType, wrapProxyClass);
+            OverrideProperties(currentType, wrapProxyClass);
 
 
             var cprovider = new CSharpCodeProvider();
@@ -105,7 +107,7 @@ namespace Clover.Proxy
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(CurrentType.Assembly.Location));
+            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(currentType.Assembly.Location));
             cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
             //RefComponents(cp, EntityTypes);
             foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
@@ -116,14 +118,14 @@ namespace Clover.Proxy
             }
 
 
-            cp.OutputAssembly = DllCachePath + CurrentType.FullName + ".Local.dll";
+            cp.OutputAssembly = DllCachePath + currentType.FullName + ".Local.dll";
             cp.GenerateInMemory = false;
             cp.IncludeDebugInformation = true;
             cp.GenerateExecutable = false; //生成EXE,不是DLL 
             cp.WarningLevel = 4;
             cp.TreatWarningsAsErrors = false;
 
-            string filePath = DllCachePath + @"Class\" + CurrentType.Namespace + "." + CurrentType.Name + ".Local.cs";
+            string filePath = DllCachePath + @"Class\" + currentType.Namespace + "." + currentType.Name + ".Local.cs";
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.WriteAllText(filePath, fileContent.ToString());
@@ -144,62 +146,82 @@ namespace Clover.Proxy
 
         private void OverrideProperties(Type CurrentType, CodeTypeDeclaration wrapProxyClass)
         {
-
             foreach (PropertyInfo pInfo in FindAllProperties(CurrentType))
             {
-                string str = string.Format("var type = Type.GetType(\"{0}\");", CurrentType.AssemblyQualifiedName);
-                str += string.Format("var mi = type.GetProperty(\"{0}\").GetGetMethod();", pInfo.Name);
-                var getinvocationCode = new CodeSnippetStatement(str + "Invocation getinvocation = new Invocation(new object[0], mi, this);");
-                var setinvocationCode = new CodeSnippetStatement(str + "Invocation setinvocation = new Invocation(new object[]{value}, mi, this);");
-                var property = new CodeMemberProperty();
-                property.Name = pInfo.Name;
-                property.Type = GetSimpleType(pInfo.PropertyType);
-                property.Attributes = MemberAttributes.Override | MemberAttributes.Public;
+                var getinvocationCode = new CodeSnippetStatement(string.Format("Invocation getinvocation = new Invocation(new object[0], _proxyBaseType.GetProperty(\"{0}\").GetGetMethod(), this);", pInfo.Name));
+                var setinvocationCode = new CodeSnippetStatement(string.Format("Invocation setinvocation = new Invocation(new object[]{{value}}, _proxyBaseType.GetProperty(\"{0}\").GetSetMethod(), this);", pInfo.Name));
+                var propertyCode = new CodeMemberProperty();
+                propertyCode.Name = pInfo.Name;
+                propertyCode.Type = GetSimpleType(pInfo.PropertyType);
+                propertyCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
 
+                if (this.BeforeCall != null || this.AfterCall != null)
+                {
+                    propertyCode.GetStatements.Add(getinvocationCode);
+                    propertyCode.SetStatements.Add(setinvocationCode);
+                }
                 if (this.BeforeCall != null)
                 {
-                    property.GetStatements.Add(getinvocationCode);
-                    property.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
-                    property.SetStatements.Add(setinvocationCode);
-                    property.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
+                    propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
+                    propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
                 }
 
-                property.GetStatements.Add(new CodeSnippetStatement(string.Format("var temp_returnData_1024=base.{0};", pInfo.Name)));
-                property.SetStatements.Add(new CodeSnippetStatement(string.Format("base.{0} = value;", pInfo.Name)));
+                propertyCode.GetStatements.Add(new CodeSnippetStatement(string.Format("var temp_returnData_1024 = base.{0};\r\ngetinvocation.ReturnValue = temp_returnData_1024;", pInfo.Name)));
+                propertyCode.SetStatements.Add(new CodeSnippetStatement(string.Format("base.{0} = value;", pInfo.Name)));
 
                 if (this.AfterCall != null)
                 {
-                    property.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(getinvocation);"));
-                    property.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(setinvocation);"));
+                    propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(getinvocation);"));
+                    propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(setinvocation);"));
                 }
 
-                property.GetStatements.Add(new CodeSnippetStatement("return temp_returnData_1024;"));
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("var result = "));
+                CodeCastExpression castExpression = new CodeCastExpression(pInfo.PropertyType, new CodeVariableReferenceExpression("getinvocation.ReturnValue"));
+                propertyCode.GetStatements.Add(castExpression);
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("return result;"));
 
-                wrapProxyClass.Members.Add(property);
+                //propertyCode.GetStatements.Add(new CodeSnippetStatement("return invocation.ReturnValue;"));
+
+                wrapProxyClass.Members.Add(propertyCode);
 
             }
         }
 
         private void OverrideMethods(Type CurrentType, CodeTypeDeclaration wrapProxyClass)
         {
-            foreach (MethodInfo item in FindAllMethods(CurrentType))
-            {
-                var method = new CodeMemberMethod();
-                method.Name = item.Name;
-                if (item.ReturnType != typeof(void))
-                    method.ReturnType = GetSimpleType(item.ReturnType);
+            foreach (MethodInfo methodInfo in FindAllMethods(CurrentType))
+            {          
+                object[] obj = new object[methodInfo.GetParameters().Length];
+                obj[0] = methodInfo.GetParameters()[0].Name;
+                var methodCode = new CodeMemberMethod();
+                methodCode.Name = methodInfo.Name;
+                if (methodInfo.ReturnType != typeof(void))
+                    methodCode.ReturnType = GetSimpleType(methodInfo.ReturnType);
 
-                foreach (ParameterInfo input in item.GetParameters())
+                var parameterList = methodInfo.GetParameters();
+                foreach (ParameterInfo input in parameterList)
                 {
-                    method.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
+                    methodCode.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
+                    // methodCode.Statements.Add(new CodeSnippetExpression(input.Name));
                 }
+
+                CodeArrayCreateExpression ca1 = new CodeArrayCreateExpression("System.Object", parameterList.Length);
+                CodeVariableDeclarationStatement cv1 = new CodeVariableDeclarationStatement("System.Object[]", "arguments", ca1);
+                methodCode.Statements.Add(cv1);
+                for (int i = 0; i < parameterList.Length; i++)
+                {
+                    CodeAssignStatement as1 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("arguments[{0}]", i)), new CodeVariableReferenceExpression(parameterList[i].Name));
+                    methodCode.Statements.Add(as1);
+                }
+                var invocationCode = new CodeSnippetStatement(string.Format("Invocation invocation = new Invocation(arguments, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name));
+                methodCode.Statements.Add(invocationCode);
 
                 #region ignore log
                 bool enableLog = false;
                 if (enableLog)
                 {
                     string code = "";
-                    foreach (ParameterInfo input in item.GetParameters())
+                    foreach (ParameterInfo input in methodInfo.GetParameters())
                     {
                         Situation situcation = SituationHelper.GetSituation(input.ParameterType);
 
@@ -222,41 +244,47 @@ namespace Clover.Proxy
                                     string.Format("Clover.AgileBet.Logger.Current.WriteEntry({0});", input.Name);
                         }
                     }
-                    method.Statements.Add(new CodeSnippetStatement(code));
+                    methodCode.Statements.Add(new CodeSnippetStatement(code));
                 }
                 #endregion
 
                 if (this.BeforeCall != null)
                 {
-                    method.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(null);"));
+                    methodCode.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(invocation);"));
                 }
-                method.Attributes = MemberAttributes.Override | MemberAttributes.Public;
-                if (item.ReturnType != typeof(void))
+                methodCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
+                if (methodInfo.ReturnType != typeof(void))
                 {
-                    method.Statements.Add(new CodeSnippetStatement("var temp_returnData_1024="));
+                    methodCode.Statements.Add(new CodeSnippetStatement("var temp_returnData_1024="));
                 }
                 var cs = new CodeMethodInvokeExpression();
                 //bug
-                cs.Method = new CodeMethodReferenceExpression { MethodName = "base." + item.Name };
-                foreach (ParameterInfo input in item.GetParameters())
+                cs.Method = new CodeMethodReferenceExpression { MethodName = "base." + methodInfo.Name };
+                foreach (ParameterInfo input in methodInfo.GetParameters())
                 {
                     Type t = input.ParameterType;
                     Situation situation = SituationHelper.GetSituation(t);
                     cs.Parameters.Add(new CodeSnippetExpression(input.Name));
                 }
-                method.Statements.Add(cs);
+                methodCode.Statements.Add(cs);
+
+                CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression("invocation.ReturnValue"), new CodeVariableReferenceExpression("temp_returnData_1024"));
+                methodCode.Statements.Add(as11);
 
                 if (this.AfterCall != null)
                 {
-                    method.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(null);"));
+                    methodCode.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(invocation);"));
                 }
 
-                if (item.ReturnType != typeof(void))
+                if (methodInfo.ReturnType != typeof(void))
                 {
-                    method.Statements.Add(new CodeSnippetStatement("return temp_returnData_1024;"));
+                    methodCode.Statements.Add(new CodeSnippetStatement("var result = "));       
+                    CodeCastExpression castExpression = new CodeCastExpression(methodInfo.ReturnType, new CodeVariableReferenceExpression("invocation.ReturnValue"));
+                    methodCode.Statements.Add(castExpression);
+                    methodCode.Statements.Add(new CodeSnippetStatement("return result;"));
                 }
 
-                wrapProxyClass.Members.Add(method);
+                wrapProxyClass.Members.Add(methodCode);
 
             }
         }
