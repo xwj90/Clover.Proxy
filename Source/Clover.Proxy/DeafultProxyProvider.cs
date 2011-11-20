@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -17,8 +18,8 @@ namespace Clover.Proxy
         private readonly string DllCachePath = AppDomain.CurrentDomain.BaseDirectory;
         private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
         private readonly List<string> Namespaces = new List<string>();
-        private Assembly ProxyAssembly;
-        private ProxyConfiguration config;
+        private ProxyConfiguration config = null;
+        private static ConcurrentDictionary<Type, Assembly> assemblies = new ConcurrentDictionary<Type, Assembly>();
 
         public DefaultProxyProvider(ProxyConfiguration config)
         {
@@ -29,13 +30,10 @@ namespace Clover.Proxy
 
         public override T CreateInstance<T>()
         {
-            ProxyAssembly = CreateLocalAssembly<T>(typeof(T).Assembly);
-
-            Type tempType = ProxyAssembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
-            return (T)Activator.CreateInstance(tempType, new Object[]
-            {
-                this
-            });
+            var type = typeof(T);
+            var assembly = assemblies.GetOrAdd(type, (t) => { return CreateLocalAssembly<T>(typeof(T).Assembly); });
+            Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
+            return (T)Activator.CreateInstance(proxyType, new Object[] { this });
         }
 
         private List<MethodInfo> FindAllMethods(Type type)
@@ -47,11 +45,11 @@ namespace Clover.Proxy
             return type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.GetGetMethod().IsVirtual).ToList();
         }
 
-        public Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
+        private Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
             Type currentType = typeof(T);
             string localClassName = TypeInformation.GetLocalProxyClassName(currentType);
-            // SituationHelper.GetLocalProxyClassName(CurrentType);
+            // SituationHelper.GetLocalProxyClassName(currentType);
 
             var compunit = new CodeCompileUnit();
             var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(currentType));
@@ -144,9 +142,9 @@ namespace Clover.Proxy
             return cr.CompiledAssembly;
         }
 
-        private void OverrideProperties(Type CurrentType, CodeTypeDeclaration wrapProxyClass)
+        private void OverrideProperties(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {
-            foreach (PropertyInfo pInfo in FindAllProperties(CurrentType))
+            foreach (PropertyInfo pInfo in FindAllProperties(currentType))
             {
                 var getinvocationCode = new CodeSnippetStatement(string.Format("Invocation getinvocation = new Invocation(new object[0], _proxyBaseType.GetProperty(\"{0}\").GetGetMethod(), this);", pInfo.Name));
                 var setinvocationCode = new CodeSnippetStatement(string.Format("Invocation setinvocation = new Invocation(new object[]{{value}}, _proxyBaseType.GetProperty(\"{0}\").GetSetMethod(), this);", pInfo.Name));
@@ -187,10 +185,10 @@ namespace Clover.Proxy
             }
         }
 
-        private void OverrideMethods(Type CurrentType, CodeTypeDeclaration wrapProxyClass)
+        private void OverrideMethods(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {
-            foreach (MethodInfo methodInfo in FindAllMethods(CurrentType))
-            {          
+            foreach (MethodInfo methodInfo in FindAllMethods(currentType))
+            {
                 object[] obj = new object[methodInfo.GetParameters().Length];
                 obj[0] = methodInfo.GetParameters()[0].Name;
                 var methodCode = new CodeMemberMethod();
@@ -278,7 +276,7 @@ namespace Clover.Proxy
 
                 if (methodInfo.ReturnType != typeof(void))
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement("var result = "));       
+                    methodCode.Statements.Add(new CodeSnippetStatement("var result = "));
                     CodeCastExpression castExpression = new CodeCastExpression(methodInfo.ReturnType, new CodeVariableReferenceExpression("invocation.ReturnValue"));
                     methodCode.Statements.Add(castExpression);
                     methodCode.Statements.Add(new CodeSnippetStatement("return result;"));

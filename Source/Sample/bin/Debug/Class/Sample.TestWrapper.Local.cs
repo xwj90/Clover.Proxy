@@ -22,16 +22,45 @@ namespace Sample.Local {
         
         private Clover.Proxy.ProxyProviderBase _proxyProviderBase;
         
+        private System.Type _proxyBaseType;
+        
         public Internal_Local_TestWrapper(Clover.Proxy.ProxyProviderBase _proxyProviderBase) {
 this._proxyProviderBase=_proxyProviderBase;
+this._proxyBaseType = Type.GetType("Sample.TestWrapper, Sample, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
+        }
+        
+        public override int Name {
+            get {
+Invocation getinvocation = new Invocation(new object[0], _proxyBaseType.GetProperty("Name").GetGetMethod(), this);
+_proxyProviderBase.ExecuteBeforeCall(getinvocation);
+var temp_returnData_1024 = base.Name;
+getinvocation.ReturnValue = temp_returnData_1024;
+_proxyProviderBase.AfterCall(getinvocation);
+var result = 
+                ((int)(getinvocation.ReturnValue));
+return result;
+            }
+            set {
+Invocation setinvocation = new Invocation(new object[]{value}, _proxyBaseType.GetProperty("Name").GetSetMethod(), this);
+_proxyProviderBase.ExecuteBeforeCall(setinvocation);
+base.Name = value;
+_proxyProviderBase.AfterCall(setinvocation);
+            }
         }
         
         public override List<global::Sample.TestEntity> GetAll(int i, string s) {
-_proxyProviderBase.ExecuteBeforeCall(null);
+            object[] arguments = new object[2];
+            arguments[0] = i;
+            arguments[1] = s;
+Invocation invocation = new Invocation(arguments, _proxyBaseType.GetMethod("GetAll"), this);
+_proxyProviderBase.ExecuteBeforeCall(invocation);
 var temp_returnData_1024=
             base.GetAll(i, s);
-_proxyProviderBase.AfterCall();
-return temp_returnData_1024;
+            invocation.ReturnValue = temp_returnData_1024;
+_proxyProviderBase.AfterCall(invocation);
+var result = 
+            ((System.Collections.Generic.List<Sample.TestEntity>)(invocation.ReturnValue));
+return result;
         }
     }
 }

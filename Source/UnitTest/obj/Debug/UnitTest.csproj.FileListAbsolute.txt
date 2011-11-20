@@ -1,5 +1,0 @@
-D:\My Document\MyServer\Clover.Proxy\Source\UnitTest\bin\Debug\UnitTest.dll
-D:\My Document\MyServer\Clover.Proxy\Source\UnitTest\bin\Debug\UnitTest.pdb
-D:\My Document\MyServer\Clover.Proxy\Source\UnitTest\obj\Debug\ResolveAssemblyReference.cache
-D:\My Document\MyServer\Clover.Proxy\Source\UnitTest\obj\Debug\UnitTest.dll
-D:\My Document\MyServer\Clover.Proxy\Source\UnitTest\obj\Debug\UnitTest.pdb
