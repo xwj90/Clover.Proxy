@@ -1,5 +1,0 @@
-D:\My Document\MyServer\Clover.Proxy\Clover.Proxy\obj\Debug\ResolveAssemblyReference.cache
-D:\My Document\MyServer\Clover.Proxy\Clover.Proxy\bin\Debug\Clover.Proxy.dll
-D:\My Document\MyServer\Clover.Proxy\Clover.Proxy\bin\Debug\Clover.Proxy.pdb
-D:\My Document\MyServer\Clover.Proxy\Clover.Proxy\obj\Debug\Clover.Proxy.dll
-D:\My Document\MyServer\Clover.Proxy\Clover.Proxy\obj\Debug\Clover.Proxy.pdb
