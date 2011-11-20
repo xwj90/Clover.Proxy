@@ -17,8 +17,8 @@ namespace Clover.Proxy
         public List<string> Namespaces { get; set; }
         public Assembly InterfaceAssembly { get; set; }
 
-        public Action<object[]> BeforeCall { get; set; }
-        public Action AfterCall { get; set; }
+        public Action<Invocation> BeforeCall { get; set; }
+        public Action<Invocation> AfterCall { get; set; }
 
         public bool EnableCrossDomain { get; set; }
         public bool EnableDebug { get; set; }

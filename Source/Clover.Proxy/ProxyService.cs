@@ -8,8 +8,8 @@ namespace Clover.Proxy
         private readonly ConcurrentDictionary<Type, ProxyProviderBase> TypeConfigurations =
             new ConcurrentDictionary<Type, ProxyProviderBase>();
 
-        public Action<object[]> BeforeCall { get; set; }
-        public Action AfterCall { get; set; }
+        public Action<Invocation> BeforeCall { get; set; }
+        public Action<Invocation> AfterCall { get; set; }
 
         public T Create<T>()
         {

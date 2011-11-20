@@ -9,13 +9,15 @@ namespace Clover.Proxy
         public ProxyProviderBase(ProxyConfiguration config)
         {
             this.config = config;
+            //todo:ProxyConfiguration修改
             this.BeforeCall = config.BeforeCall;
             this.AfterCall = config.AfterCall;
         }
+        public ProxyProviderBase() { }
         #region IProxyProvider Members
 
-        public Action<object[]> BeforeCall { get; set; }
-        public Action AfterCall { get; set; }
+        public Action<Invocation> BeforeCall { get; set; }
+        public Action<Invocation> AfterCall { get; set; }
 
         public virtual T CreateInstance<T>()
         {
@@ -23,19 +25,19 @@ namespace Clover.Proxy
         }
 
 
-        public void ExecuteBeforeCall(object[] objs)
+        public void ExecuteBeforeCall(Invocation invocation)
         {
             if (BeforeCall != null)
             {
-                BeforeCall(objs);
+                BeforeCall(invocation);
             }
         }
 
-        public void ExecuteAfterCall()
+        public void ExecuteAfterCall(Invocation invocation)
         {
             if (AfterCall != null)
             {
-                AfterCall();
+                AfterCall(invocation);
             }
         }
         #endregion

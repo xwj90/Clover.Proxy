@@ -14,13 +14,14 @@ namespace Sample
             //simple
             var service = new ProxyService();
             service.BeforeCall += (p) => { Console.WriteLine("Before Call"); };
-            service.AfterCall += () => { Console.WriteLine("After Call"); };
+            service.AfterCall += (p) => { Console.WriteLine("After Call"); };
             var item = service.Create<TestWrapper>();
             item.GetAll(1, "213");
+            item.Name = 5;
 
-            service.AfterCall = () => { Console.WriteLine("After Call2"); };
-            var item2 = service.Create<TestWrapper2>();
-            item2.Test("213");
+            //service.AfterCall = () => { Console.WriteLine("After Call2"); };
+            //var item2 = service.Create<TestWrapper2>();
+            //item2.Test("213");
         }
     }
 
@@ -38,6 +39,7 @@ namespace Sample
             Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
             return new List<TestEntity> { new TestEntity(), new TestEntity() };
         }
+        public virtual int Name { get; set; }
     }
     public class TestWrapper2
     {
