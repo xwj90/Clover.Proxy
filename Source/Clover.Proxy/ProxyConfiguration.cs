@@ -1,13 +1,12 @@
-﻿//////////////////
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Collections.Concurrent;
+using System.Configuration;
 namespace Clover.Proxy
 {
     public class ProxyConfiguration
     {
-        
         public bool DisableAutoProxy { get; set; }
         public bool EnableDebug { get; set; }
         public bool EnableCrossDomain { get; set; }
@@ -21,30 +20,34 @@ namespace Clover.Proxy
 
 
         public ProxyConfiguration()
+            : this(null)
         {
-            //this.DisableAutoProxy = attribute.DisableAutoProxy;
-            //this.EnableDebug = attribute.EnableDebug;
-            //this.EnableCrossDomain = attribute.EnableCrossDomain;
-            //this.DllCachedPath = attribute.DllCachedPath;
-            //this.BeforeCall = attribute.BeforeCall;
-            //this.ProxyType = attribute.ProxyType;
 
-            //Get From Configuration File
         }
         private ProxyConfiguration(ProxyAttribute attribute)
         {
-            this.DisableAutoProxy = attribute.DisableAutoProxy;
-            this.EnableDebug = attribute.EnableDebug;
-            this.EnableCrossDomain = attribute.EnableCrossDomain;
-            this.DllCachedPath = attribute.DllCachedPath;
-            this.BeforeCall = attribute.BeforeCall;
-            this.ProxyType = attribute.ProxyType;
+            if (attribute == null)
+            {
+                this.DisableAutoProxy = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.Proxy.DisableAutoProxy"]);
+                this.EnableDebug = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.Proxy.EnableDebug"]);
+                this.DllCachedPath = Convert.ToString(ConfigurationManager.AppSettings["Clover.Proxy.DllCachedPath"]);
+                this.ProxyType = (ProxyType)Enum.Parse(typeof(ProxyType), Convert.ToString(ConfigurationManager.AppSettings["Clover.Proxy.ProxyType"]));
+            }
+            else
+            {
+                this.DisableAutoProxy = attribute.DisableAutoProxy;
+                this.EnableDebug = attribute.EnableDebug;
+                this.DllCachedPath = attribute.DllCachedPath;
+                this.BeforeCall = attribute.BeforeCall;
+                this.AfterCall = attribute.AfterCall;
+                this.ProxyType = attribute.ProxyType;
+            }
             if (string.IsNullOrWhiteSpace((this.DllCachedPath)))
             {
                 this.DllCachedPath = AppDomain.CurrentDomain.BaseDirectory;
             }
         }
-        public static ProxyConfiguration CreateByType(Type type)
+        public static ProxyConfiguration Create(Type type)
         {
             return configurations.GetOrAdd(type, (t) =>
             {
@@ -62,7 +65,8 @@ namespace Clover.Proxy
                 foreach (var item in type.GetMembers())
                 {
                     object[] memberStatus = item.GetCustomAttributes(typeof(ProxyAttribute), true);
-                    if(memberStatus.Length>0){
+                    if (memberStatus.Length > 0)
+                    {
                         config.MemberAutoProxyStatus[item.Name] = (memberStatus[0] as ProxyAttribute).DisableAutoProxy;
                     }
                 }
@@ -80,28 +84,26 @@ namespace Clover.Proxy
     {
         public bool DisableAutoProxy { get; set; }
         public bool EnableDebug { get; set; }
-        public bool EnableCrossDomain { get; set; }
         public string DllCachedPath { get; set; }
         public Action<Invocation> BeforeCall { get; set; }
         public Action<Invocation> AfterCall { get; set; }
         public ProxyType ProxyType { get; set; }
-        
 
         public ProxyAttribute()
         {
             this.EnableDebug = true;
-            this.EnableCrossDomain = false;
             this.DllCachedPath = null;
             this.BeforeCall = null;
             this.AfterCall = null;
             this.DisableAutoProxy = false;
+            this.ProxyType = Proxy.ProxyType.Default;
         }
     }
 
     public enum ProxyType
     {
-        Default=0,
-        Local=0,
-        Remote=1,
+        Default = 0,
+        Local = 0,
+        Remote = 1,
     }
 }

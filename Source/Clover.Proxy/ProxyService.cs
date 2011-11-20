@@ -18,7 +18,7 @@ namespace Clover.Proxy
             ProxyProviderBase provider = TypeConfigurations.GetOrAdd(t,
                 new Func<ProxyProviderBase>(() =>
                         {
-                            var config = ProxyConfiguration.CreateByType(t);
+                            var config = ProxyConfiguration.Create(t);
                             config.BeforeCall = BeforeCall;
                             config.AfterCall = AfterCall;
                             var p = ProxyProviderFactory.CreateProvider(config);

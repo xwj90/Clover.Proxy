@@ -34,7 +34,7 @@ namespace Clover.Proxy
 
         public override T CreateInstance<T>()
         {
-            var configuratio = ProxyConfiguration.CreateByType(typeof(T));
+            var configuratio = ProxyConfiguration.Create(typeof(T));
             if (configuratio.DisableAutoProxy)
             {
                 return (T)Activator.CreateInstance(typeof(T));
