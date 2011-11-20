@@ -22,10 +22,10 @@ namespace Sample
                 Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
             };
             var item = service.Create<TestWrapper>();
-            item.GetAll(1, "213");
+            //   item.GetAll(1, "213");
             item.Name = 5;
-
-            Console.WriteLine(item.Name);
+            item.Name1 = null;
+            //  Console.WriteLine(item.Name);
 
             //service.AfterCall = () => { Console.WriteLine("After Call2"); };
             //var item2 = service.Create<TestWrapper2>();
@@ -38,7 +38,7 @@ namespace Sample
     {
     }
 
-
+    [Proxy(DisableAutoProxy = true)]
     public class TestWrapper
     {
 
@@ -48,6 +48,8 @@ namespace Sample
             return new List<TestEntity> { new TestEntity(), new TestEntity() };
         }
         public virtual int Name { get; set; }
+
+        public virtual string[] Name1 { get; set; }
     }
     public class TestWrapper2
     {

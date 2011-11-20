@@ -48,6 +48,25 @@ _proxyProviderBase.AfterCall(setinvocation);
             }
         }
         
+        public override string[] Name1 {
+            get {
+Invocation getinvocation = new Invocation(new object[0], _proxyBaseType.GetProperty("Name1").GetGetMethod(), this);
+_proxyProviderBase.ExecuteBeforeCall(getinvocation);
+var temp_returnData_1024 = base.Name1;
+getinvocation.ReturnValue = temp_returnData_1024;
+_proxyProviderBase.AfterCall(getinvocation);
+var result = 
+                ((string[])(getinvocation.ReturnValue));
+return result;
+            }
+            set {
+Invocation setinvocation = new Invocation(new object[]{value}, _proxyBaseType.GetProperty("Name1").GetSetMethod(), this);
+_proxyProviderBase.ExecuteBeforeCall(setinvocation);
+base.Name1 = value;
+_proxyProviderBase.AfterCall(setinvocation);
+            }
+        }
+        
         public override List<global::Sample.TestEntity> GetAll(int i, string s) {
             object[] arguments = new object[2];
             arguments[0] = i;

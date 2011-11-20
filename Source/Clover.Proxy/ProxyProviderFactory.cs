@@ -2,9 +2,19 @@
 {
     public class ProxyProviderFactory
     {
-        internal static ProxyProviderBase CreateProvider(ProxyConfiguration proxyConfiguration)
+        internal static ProxyProviderBase CreateProvider (ProxyConfiguration proxyConfiguration)
         {
-            return new DefaultProxyProvider(proxyConfiguration);
+            switch (proxyConfiguration.ProxyType)
+            {
+                case ProxyType.Remote:
+                    {
+                        return new RemoteDomainProxyProvider(proxyConfiguration);
+                    }
+                default:
+                    {
+                        return new DefaultProxyProvider(proxyConfiguration);
+                    }
+            }
         }
     }
 }
