@@ -42,7 +42,7 @@ namespace Sample
     public class TestWrapper
     {
 
-        public virtual List<TestEntity> GetAll(int i, string s)
+        public virtual List<TestEntity> GetAll(int arguments, string invocation)
         {
             Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
             return new List<TestEntity> { new TestEntity(), new TestEntity() };

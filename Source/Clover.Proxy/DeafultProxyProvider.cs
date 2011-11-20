@@ -29,7 +29,7 @@ namespace Clover.Proxy
             base.BeforeCall = config.BeforeCall;
             base.AfterCall = config.AfterCall;
 
-        
+
         }
 
         public override T CreateInstance<T>()
@@ -95,8 +95,8 @@ namespace Clover.Proxy
             var constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(ProxyProviderBase), "_proxyProviderBase"));
-            constructor.Statements.Add(new CodeSnippetStatement("this._proxyProviderBase=_proxyProviderBase;"));
-            constructor.Statements.Add(new CodeSnippetStatement(string.Format("this._proxyBaseType = Type.GetType(\"{0}\");", currentType.AssemblyQualifiedName)));
+            constructor.Statements.Add(new CodeAssignStatement(new CodeVariableReferenceExpression("this._proxyProviderBase"), new CodeVariableReferenceExpression("_proxyProviderBase")));
+            constructor.Statements.Add(new CodeVariableReferenceExpression(string.Format("this._proxyBaseType = Type.GetType(\"{0}\");", currentType.AssemblyQualifiedName)));
             wrapProxyClass.Members.Add(constructor);
 
             OverrideMethods(currentType, wrapProxyClass);
@@ -194,12 +194,26 @@ namespace Clover.Proxy
             }
         }
 
+        private string GetUniqueName(HashSet<string> nameSet, string oriname)
+        {
+            int counter = 0;
+            var localname = oriname;
+            while (true)
+            {
+                if (!nameSet.Contains(localname))
+                {
+                    nameSet.Add(localname);
+                    return localname;
+                }
+                counter++;
+                localname += counter;
+            }
+        }
         private void OverrideMethods(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {
             foreach (MethodInfo methodInfo in FindAllMethods(currentType))
             {
-                object[] obj = new object[methodInfo.GetParameters().Length];
-                obj[0] = methodInfo.GetParameters()[0].Name;
+                HashSet<string> nameSet = new HashSet<string>();
                 var methodCode = new CodeMemberMethod();
                 methodCode.Name = methodInfo.Name;
                 if (methodInfo.ReturnType != typeof(void))
@@ -209,86 +223,62 @@ namespace Clover.Proxy
                 foreach (ParameterInfo input in parameterList)
                 {
                     methodCode.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
-                    // methodCode.Statements.Add(new CodeSnippetExpression(input.Name));
+                    nameSet.Add(input.Name);
                 }
 
-                CodeArrayCreateExpression ca1 = new CodeArrayCreateExpression("System.Object", parameterList.Length);
-                CodeVariableDeclarationStatement cv1 = new CodeVariableDeclarationStatement("System.Object[]", "arguments", ca1);
-                methodCode.Statements.Add(cv1);
+                CodeVariableDeclarationStatement v_arguments_Code = new CodeVariableDeclarationStatement("System.Object[]", GetUniqueName(nameSet, "arguments"), new CodeArrayCreateExpression("System.Object", parameterList.Length));
+                methodCode.Statements.Add(v_arguments_Code);
                 for (int i = 0; i < parameterList.Length; i++)
                 {
-                    CodeAssignStatement as1 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("arguments[{0}]", i)), new CodeVariableReferenceExpression(parameterList[i].Name));
-                    methodCode.Statements.Add(as1);
+                    CodeAssignStatement assCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, v_arguments_Code.Name)), new CodeVariableReferenceExpression(parameterList[i].Name));
+                    methodCode.Statements.Add(assCode);
                 }
-                var invocationCode = new CodeSnippetStatement(string.Format("Invocation invocation = new Invocation(arguments, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name));
+
+                CodeMethodInvokeExpression invokeMethodCode;
+
+                var invocation_name = GetUniqueName(nameSet, "invocation");
+                var invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name));
                 methodCode.Statements.Add(invocationCode);
 
-                #region ignore log
-                bool enableLog = false;
-                if (enableLog)
-                {
-                    string code = "";
-                    foreach (ParameterInfo input in methodInfo.GetParameters())
-                    {
-                        Situation situcation = SituationHelper.GetSituation(input.ParameterType);
-
-                        if (input.ParameterType.IsClass)
-                        {
-                            code += Environment.NewLine + string.Format("if({0}!=null){{", input.Name);
-                            foreach (MemberInfo member in SituationHelper.GetMembers(input.ParameterType))
-                            {
-                                code += Environment.NewLine +
-                                        string.Format("Clover.AgileBet.Logger.Current.WriteEntry({0}.{1});",
-                                                      input.Name, member.Name);
-                            }
-                            code += Environment.NewLine +
-                                    string.Format("}}else{{Clover.AgileBet.Logger.Current.WriteEntry({0});}}",
-                                                  input.Name);
-                        }
-                        else
-                        {
-                            code += Environment.NewLine +
-                                    string.Format("Clover.AgileBet.Logger.Current.WriteEntry({0});", input.Name);
-                        }
-                    }
-                    methodCode.Statements.Add(new CodeSnippetStatement(code));
-                }
-                #endregion
 
                 if (this.BeforeCall != null)
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(invocation);"));
+                    invokeMethodCode = new CodeMethodInvokeExpression();
+                    invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteBeforeCall" };
+                    invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                    invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
+                    methodCode.Statements.Add(invokeMethodCode);
                 }
                 methodCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
+                var temp_returnData = GetUniqueName(nameSet, "temp_returnData");
                 if (methodInfo.ReturnType != typeof(void))
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement("var temp_returnData_1024="));
+                    methodCode.Statements.Add(new CodeSnippetStatement(string.Format("var {0}=", temp_returnData)));
                 }
-                var cs = new CodeMethodInvokeExpression();
-                //bug
-                cs.Method = new CodeMethodReferenceExpression { MethodName = "base." + methodInfo.Name };
-                foreach (ParameterInfo input in methodInfo.GetParameters())
+                invokeMethodCode = new CodeMethodInvokeExpression();
+                invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "base." + methodInfo.Name };
+                for (int i = 0; i < parameterList.Length; i++)
                 {
-                    Type t = input.ParameterType;
-                    Situation situation = SituationHelper.GetSituation(t);
-                    cs.Parameters.Add(new CodeSnippetExpression(input.Name));
+                    invokeMethodCode.Parameters.Add(new CodeCastExpression(parameterList[i].ParameterType, new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, v_arguments_Code.Name))));
                 }
-                methodCode.Statements.Add(cs);
+                methodCode.Statements.Add(invokeMethodCode);
 
-                CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression("invocation.ReturnValue"), new CodeVariableReferenceExpression("temp_returnData_1024"));
+                CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{0}.ReturnValue", invocation_name)), new CodeVariableReferenceExpression(temp_returnData));
                 methodCode.Statements.Add(as11);
 
                 if (this.AfterCall != null)
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(invocation);"));
+                    invokeMethodCode = new CodeMethodInvokeExpression();
+                    invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "AfterCall" };
+                    invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                    invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
+                    methodCode.Statements.Add(invokeMethodCode);
                 }
 
                 if (methodInfo.ReturnType != typeof(void))
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement("var result = "));
-                    CodeCastExpression castExpression = new CodeCastExpression(methodInfo.ReturnType, new CodeVariableReferenceExpression("invocation.ReturnValue"));
-                    methodCode.Statements.Add(castExpression);
-                    methodCode.Statements.Add(new CodeSnippetStatement("return result;"));
+                    CodeCastExpression castExpression = new CodeCastExpression(methodInfo.ReturnType, new CodeVariableReferenceExpression(string.Format("{0}.ReturnValue", invocation_name)));
+                    methodCode.Statements.Add(new CodeMethodReturnStatement(castExpression));
                 }
 
                 wrapProxyClass.Members.Add(methodCode);
