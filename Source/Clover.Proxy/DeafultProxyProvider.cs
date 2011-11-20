@@ -237,7 +237,23 @@ namespace Clover.Proxy
                 CodeMethodInvokeExpression invokeMethodCode;
 
                 var invocation_name = GetUniqueName(nameSet, "invocation");
-                var invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name));
+                CodeSnippetStatement invocationCode = null;
+                if (parameterList.Length == 0)
+                {
+                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name));
+                }
+                else
+                {
+                    var typeArrayName = GetUniqueName(nameSet, "paramTypeList");
+                    methodCode.Statements.Add(new CodeSnippetStatement(string.Format("Type[] {0} = new Type[{1}];", typeArrayName, parameterList.Length)));
+                    for (int i = 0; i < parameterList.Length; i++)
+                    {
+                        CodeAssignStatement assCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, typeArrayName)), new CodeSnippetExpression(string.Format("typeof({0});", parameterList[i].ParameterType)));
+                        methodCode.Statements.Add(assCode);
+                    }
+                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\", {3}), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name, typeArrayName));
+                }
+
                 methodCode.Statements.Add(invocationCode);
 
 

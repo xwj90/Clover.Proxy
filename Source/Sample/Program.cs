@@ -22,7 +22,7 @@ namespace Sample
                 Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
             };
             var item = service.Create<TestWrapper>();
-            //   item.GetAll(1, "213");
+               item.GetAll(1, "213");
             item.Name = 5;
             item.Name1 = null;
             //  Console.WriteLine(item.Name);
@@ -43,6 +43,11 @@ namespace Sample
     {
 
         public virtual List<TestEntity> GetAll(int arguments, string invocation)
+        {
+            Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
+            return new List<TestEntity> { new TestEntity(), new TestEntity() };
+        }
+        public virtual List<TestEntity> GetAll(int arguments, string invocation, string t3)
         {
             Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
             return new List<TestEntity> { new TestEntity(), new TestEntity() };
