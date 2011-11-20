@@ -27,7 +27,7 @@ namespace Sample
             item.GetAll(1, "213");
             item.Name = 5;
             item.Name1 = null;
-            //  Console.WriteLine(item.Name);
+            Console.WriteLine(item.Name);
 
             //service.AfterCall = () => { Console.WriteLine("After Call2"); };
             //var item2 = service.Create<TestWrapper2>();
@@ -54,6 +54,7 @@ namespace Sample
             Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
             return new List<TestEntity> { new TestEntity(), new TestEntity() };
         }
+        [IgnoreProxy]
         public virtual int Name { get; set; }
 
         public virtual string[] Name1 { get; set; }
