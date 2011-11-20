@@ -38,7 +38,7 @@ namespace Sample
     {
     }
 
-    [Proxy(DisableAutoProxy = true)]
+    //[Proxy(DisableAutoProxy = true)]
     public class TestWrapper
     {
 

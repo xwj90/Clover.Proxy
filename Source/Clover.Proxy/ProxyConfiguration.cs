@@ -66,6 +66,11 @@ namespace Clover.Proxy
                         config.MemberAutoProxyStatus[item.Name] = (memberStatus[0] as ProxyAttribute).DisableAutoProxy;
                     }
                 }
+
+                if (string.IsNullOrWhiteSpace((config.DllCachedPath)))
+                {
+                    config.DllCachedPath = AppDomain.CurrentDomain.BaseDirectory;
+                }
                 return config;
             });
         }

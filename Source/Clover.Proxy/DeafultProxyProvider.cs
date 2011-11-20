@@ -24,8 +24,12 @@ namespace Clover.Proxy
         public DefaultProxyProvider(ProxyConfiguration config)
         {
             this.config = config;
+            this.DllCachePath = config.DllCachedPath;
+
             base.BeforeCall = config.BeforeCall;
             base.AfterCall = config.AfterCall;
+
+        
         }
 
         public override T CreateInstance<T>()
