@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using Clover.Proxy;
 using Clover.Proxy.OldDesign;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sample
 {
@@ -22,14 +25,24 @@ namespace Sample
                 Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
             };
             var item = service.Create<TestWrapper>();
-               item.GetAll(1, "213");
+            //item.GetAll(1, "213");
             item.Name = 5;
-            item.Name1 = null;
-            //  Console.WriteLine(item.Name);
+            //item.Name1 = null;
 
-            //service.AfterCall = () => { Console.WriteLine("After Call2"); };
-            //var item2 = service.Create<TestWrapper2>();
-            //item2.Test("213");
+
+            var concurentDictionary = new ConcurrentDictionary<int, int>();
+            int v = 0;
+
+            Parallel.For(0, 1000, (i) =>
+               {
+                   var key = 1;
+                   var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
+                       {
+                           return Interlocked.Increment(ref v);
+                       });
+                   Console.WriteLine(returnValue);
+               });
+
         }
     }
 
