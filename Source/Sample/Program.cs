@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Clover.Proxy;
 using Clover.Proxy.OldDesign;
@@ -29,23 +29,58 @@ namespace Sample
             item.Name = 5;
             //item.Name1 = null;
 
+            ComplexClass cc = service.Create<ComplexClass>();
+            cc.TestInt = 5;
+            cc.TestString = "swc";
+            cc.TestDateTime = DateTime.Now;
+            cc.TestIntArray = new int[1];
+            cc.TestStringArray = new string[1];
+            cc.TestIntList = new List<int>();
+            cc.TestStringList = new List<string>();
+            cc.TestNestClass = new ComplexClass.NestClass();
+            cc.TestNestClass.A = 5;
+
 
             var concurentDictionary = new ConcurrentDictionary<int, int>();
             int v = 0;
 
-            Parallel.For(0, 1000, (i) =>
-               {
-                   var key = 1;
-                   var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
-                       {
-                           return Interlocked.Increment(ref v);
-                       });
-                   Console.WriteLine(returnValue);
-               });
+            //Parallel.For(0, 1000, (i) =>
+            //   {
+            //       var key = 1;
+            //       var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
+            //           {
+            //               return Interlocked.Increment(ref v);
+            //           });
+            //       Console.WriteLine(returnValue);
+            //   });
 
         }
     }
+    public class ComplexClass
+    {
+        public class NestClass
+        {
+            public virtual int A { get; set; }
+        }
 
+        public virtual int TestInt { get; set; }
+        public virtual string TestString { get; set; }
+        public virtual DateTime TestDateTime { get; set; }
+        public virtual int[] TestIntArray { get; set; }
+        public virtual string[] TestStringArray { get; set; }
+        public virtual List<int> TestIntList { get; set; }
+        public virtual List<string> TestStringList { get; set; }
+        public virtual NestClass TestNestClass { get; set; }
+
+        public ComplexClass()
+        {
+            TestIntArray = new int[10];
+            TestStringArray = new string[10];
+            TestIntList = new List<int>();
+            TestStringList = new List<string>();
+            TestNestClass = new NestClass();
+        }
+    }
 
     public class TestEntity
     {

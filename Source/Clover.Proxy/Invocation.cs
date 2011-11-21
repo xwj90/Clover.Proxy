@@ -15,5 +15,10 @@ namespace Clover.Proxy
             this.ProxiedMethod = proxiedMethod;
             this.ProxyObject = proxyObject;
         }
+
+        public override string ToString()
+        {
+            return string.Format("Arguments:{0},Method:{1},ReturnValue:{2}", string.Join(",", Arguments), ProxiedMethod.Name, ReturnValue);
+        }
     }
 }
