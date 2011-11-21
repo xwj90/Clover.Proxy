@@ -37,6 +37,8 @@ namespace Sample
             cc.TestNestClass.A = 5;
 
           
+          
+            item.Test("111111");
 
             var concurentDictionary = new ConcurrentDictionary<int, int>();
             int v = 0;
@@ -69,7 +71,7 @@ namespace Sample
         public virtual List<int> TestIntList { get; set; }
         public virtual List<string> TestStringList { get; set; }
         public virtual NestClass TestNestClass { get; set; }
-
+         
         public ComplexClass()
         {
             TestIntArray = new int[10];
