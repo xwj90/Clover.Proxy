@@ -44,100 +44,74 @@ namespace Clover.Proxy
             Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });
         }
-
+        private Type ignoreAttr = typeof(IgnoreProxyAttribute);
         private List<MethodInfo> FindAllMethods(Type type)
         {
-            return type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName).ToList();
+            var miList = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName);
+            var resultList = new List<MethodInfo>();
+            foreach (var mi in miList)
+            {
+                var attrs = mi.GetCustomAttributes(ignoreAttr, true);
+                if (attrs.Length == 0) resultList.Add(mi);
+            }
+            return resultList;
         }
         private List<PropertyInfo> FindAllProperties(Type type)
         {
-            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.GetGetMethod().IsVirtual).ToList();
+            var piList = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.GetGetMethod().IsVirtual).ToList();
+            var resultList = new List<PropertyInfo>();
+            foreach (var pi in piList)
+            {
+                var attrs = pi.GetCustomAttributes(ignoreAttr, true);
+                if (attrs.Length == 0) resultList.Add(pi);
+            }
+            return resultList;
         }
 
         private Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
-            Type currentType = typeof(T);
-            string localClassName = TypeInformation.GetLocalProxyClassName(currentType);
-            // SituationHelper.GetLocalProxyClassName(currentType);
+            Type proxyedType = typeof(T);
+            string localClassName = TypeInformation.GetLocalProxyClassName(proxyedType);
 
-            var compunit = new CodeCompileUnit();
-            var sample = new CodeNamespace(TypeInformation.GetLocalNamespace(currentType));
-            compunit.Namespaces.Add(sample);
-
-            sample.Imports.Add(new CodeNamespaceImport("System"));
-            sample.Imports.Add(new CodeNamespaceImport("System.Linq"));
-            sample.Imports.Add(new CodeNamespaceImport("System.Collections"));
-            sample.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
-            sample.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
-            foreach (Type item in InterfaceAssembly.GetTypes())
-            {
-                sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
-            }
-            foreach (string @namespace in Namespaces)
-            {
-                sample.Imports.Add(new CodeNamespaceImport(@namespace));
-            }
-
-            //定义一个名为DemoClass的类
-            // compunit.ReferencedAssemblies.Add(currentType.Assembly.FullName);
+            var codeUnit = new CodeCompileUnit();
+            var codeNamespace = CreateNSAndImportInitNS(proxyedType, codeUnit);
 
             var wrapProxyClass = new CodeTypeDeclaration(localClassName);
-            wrapProxyClass.BaseTypes.Add(currentType);
+            wrapProxyClass.BaseTypes.Add(proxyedType);
+            //todo:must be Serializable?
             wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
-            sample.Types.Add(wrapProxyClass);
+            codeNamespace.Types.Add(wrapProxyClass);
 
-            var baseField = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
-            wrapProxyClass.Members.Add(baseField);
+            var providerBaseField = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
+            wrapProxyClass.Members.Add(providerBaseField);
             var baseTypeField = new CodeMemberField(typeof(Type), "_proxyBaseType");
             wrapProxyClass.Members.Add(baseTypeField);
-
 
             var constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(ProxyProviderBase), "_proxyProviderBase"));
             constructor.Statements.Add(new CodeAssignStatement(new CodeVariableReferenceExpression("this._proxyProviderBase"), new CodeVariableReferenceExpression("_proxyProviderBase")));
-            constructor.Statements.Add(new CodeVariableReferenceExpression(string.Format("this._proxyBaseType = Type.GetType(\"{0}\");", currentType.AssemblyQualifiedName)));
+            constructor.Statements.Add(new CodeVariableReferenceExpression("this._proxyBaseType = this.GetType().BaseType;"));
             wrapProxyClass.Members.Add(constructor);
 
-            OverrideMethods(currentType, wrapProxyClass);
-            OverrideProperties(currentType, wrapProxyClass);
-
+            OverrideMethods(proxyedType, wrapProxyClass);
+            OverrideProperties(proxyedType, wrapProxyClass);
 
             var cprovider = new CSharpCodeProvider();
             var fileContent = new StringBuilder();
             using (var sw = new StringWriter(fileContent))
             {
-                cprovider.GenerateCodeFromCompileUnit(compunit, sw, new CodeGeneratorOptions());
+                cprovider.GenerateCodeFromCompileUnit(codeUnit, sw, new CodeGeneratorOptions());
             }
 
-            var cp = new CompilerParameters();
-            cp.ReferencedAssemblies.Add("System.dll");
-            cp.ReferencedAssemblies.Add("System.Core.dll");
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(currentType.Assembly.Location));
-            cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
-            //RefComponents(cp, EntityTypes);
-            foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
-            {
-                if (file.ToUpper().StartsWith("Clover."))
-                    continue;
-                cp.ReferencedAssemblies.Add(file);
-            }
+            var compilerParameters = CreateCompilerParameters(proxyedType);
 
-
-            cp.OutputAssembly = DllCachePath + currentType.FullName + ".Local.dll";
-            cp.GenerateInMemory = false;
-            cp.IncludeDebugInformation = true;
-            cp.GenerateExecutable = false; //生成EXE,不是DLL 
-            cp.WarningLevel = 4;
-            cp.TreatWarningsAsErrors = false;
-
-            string filePath = DllCachePath + @"Class\" + currentType.Namespace + "." + currentType.Name + ".Local.cs";
+            string filePath = DllCachePath + @"Class\" + proxyedType.Namespace + "." + proxyedType.Name + ".Local.cs";
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.WriteAllText(filePath, fileContent.ToString());
 
-            CompilerResults cr = cprovider.CompileAssemblyFromFile(cp, filePath);
+            CompilerResults cr = cprovider.CompileAssemblyFromFile(compilerParameters, filePath);
 
             String outputMessage = "";
             foreach (string item in cr.Output)
@@ -151,6 +125,52 @@ namespace Clover.Proxy
             return cr.CompiledAssembly;
         }
 
+        private CompilerParameters CreateCompilerParameters(Type proxyedType)
+        {
+            var compilerParameters = new CompilerParameters();
+            compilerParameters.ReferencedAssemblies.Add("System.dll");
+            compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
+            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(proxyedType.Assembly.Location));
+            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
+
+            foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
+            {
+                if (file.ToUpper().StartsWith("Clover."))
+                    continue;
+                compilerParameters.ReferencedAssemblies.Add(file);
+            }
+
+            compilerParameters.OutputAssembly = DllCachePath + proxyedType.FullName + ".Local.dll";
+            compilerParameters.GenerateInMemory = false;
+            compilerParameters.IncludeDebugInformation = true;
+            compilerParameters.GenerateExecutable = false; //生成EXE,不是DLL 
+            compilerParameters.WarningLevel = 4;
+            compilerParameters.TreatWarningsAsErrors = false;
+            return compilerParameters;
+        }
+
+        private CodeNamespace CreateNSAndImportInitNS(Type currentType, CodeCompileUnit codeUnit)
+        {
+            var codeNamespace = new CodeNamespace(TypeInformation.GetLocalNamespace(currentType));
+            codeUnit.Namespaces.Add(codeNamespace);
+
+            codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
+            codeNamespace.Imports.Add(new CodeNamespaceImport("System.Linq"));
+            codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections"));
+            codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
+            codeNamespace.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
+            foreach (Type item in InterfaceAssembly.GetTypes())
+            {
+                codeNamespace.Imports.Add(new CodeNamespaceImport(item.Namespace));
+            }
+            foreach (string @namespace in Namespaces)
+            {
+                codeNamespace.Imports.Add(new CodeNamespaceImport(@namespace));
+            }
+            return codeNamespace;
+        }
+
         private void OverrideProperties(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {
             foreach (PropertyInfo pInfo in FindAllProperties(currentType))
@@ -162,58 +182,57 @@ namespace Clover.Proxy
                 propertyCode.Type = GetSimpleType(pInfo.PropertyType);
                 propertyCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
 
-                if (this.BeforeCall != null || this.AfterCall != null)
-                {
-                    propertyCode.GetStatements.Add(getinvocationCode);
-                    propertyCode.SetStatements.Add(setinvocationCode);
-                }
-                if (this.BeforeCall != null)
-                {
-                    propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
-                    propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
-                }
+                propertyCode.GetStatements.Add(getinvocationCode);
+                propertyCode.SetStatements.Add(setinvocationCode);
+
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
+                propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
 
                 propertyCode.GetStatements.Add(new CodeSnippetStatement(string.Format("var temp_returnData_1024 = base.{0};\r\ngetinvocation.ReturnValue = temp_returnData_1024;", pInfo.Name)));
                 propertyCode.SetStatements.Add(new CodeSnippetStatement(string.Format("base.{0} = value;", pInfo.Name)));
 
-                if (this.AfterCall != null)
-                {
-                    propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(getinvocation);"));
-                    propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.AfterCall(setinvocation);"));
-                }
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteAfterCall(getinvocation);"));
+                propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteAfterCall(setinvocation);"));
 
                 propertyCode.GetStatements.Add(new CodeSnippetStatement("var result = "));
                 CodeCastExpression castExpression = new CodeCastExpression(pInfo.PropertyType, new CodeVariableReferenceExpression("getinvocation.ReturnValue"));
                 propertyCode.GetStatements.Add(castExpression);
                 propertyCode.GetStatements.Add(new CodeSnippetStatement("return result;"));
 
-                //propertyCode.GetStatements.Add(new CodeSnippetStatement("return invocation.ReturnValue;"));
-
                 wrapProxyClass.Members.Add(propertyCode);
-
             }
         }
 
-        private string GetUniqueName(HashSet<string> nameSet, string oriname)
+        class UniqueNameHelper
         {
-            int counter = 0;
-            var localname = oriname;
-            while (true)
+            private HashSet<string> nameSet = new HashSet<string>();
+
+            public string ToUniqueName(string oriname)
             {
-                if (!nameSet.Contains(localname))
+                int counter = 0;
+                var temp = oriname;
+                while (true)
                 {
-                    nameSet.Add(localname);
-                    return localname;
+                    if (!nameSet.Contains(temp))
+                    {
+                        nameSet.Add(temp);
+                        return temp;
+                    }
+                    counter++;
+                    temp += counter;
                 }
-                counter++;
-                localname += counter;
+            }
+            public void Add(string name)
+            {
+                nameSet.Add(name);
             }
         }
+
         private void OverrideMethods(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {
             foreach (MethodInfo methodInfo in FindAllMethods(currentType))
             {
-                HashSet<string> nameSet = new HashSet<string>();
+                UniqueNameHelper nameHelper = new UniqueNameHelper();
                 var methodCode = new CodeMemberMethod();
                 methodCode.Name = methodInfo.Name;
                 if (methodInfo.ReturnType != typeof(void))
@@ -223,20 +242,20 @@ namespace Clover.Proxy
                 foreach (ParameterInfo input in parameterList)
                 {
                     methodCode.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
-                    nameSet.Add(input.Name);
+                    nameHelper.Add(input.Name);
                 }
 
-                CodeVariableDeclarationStatement v_arguments_Code = new CodeVariableDeclarationStatement("System.Object[]", GetUniqueName(nameSet, "arguments"), new CodeArrayCreateExpression("System.Object", parameterList.Length));
+                CodeVariableDeclarationStatement v_arguments_Code = new CodeVariableDeclarationStatement("System.Object[]", nameHelper.ToUniqueName("arguments"), new CodeArrayCreateExpression("System.Object", parameterList.Length));
                 methodCode.Statements.Add(v_arguments_Code);
                 for (int i = 0; i < parameterList.Length; i++)
                 {
-                    CodeAssignStatement assCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, v_arguments_Code.Name)), new CodeVariableReferenceExpression(parameterList[i].Name));
-                    methodCode.Statements.Add(assCode);
+                    CodeAssignStatement assignCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, v_arguments_Code.Name)), new CodeVariableReferenceExpression(parameterList[i].Name));
+                    methodCode.Statements.Add(assignCode);
                 }
 
                 CodeMethodInvokeExpression invokeMethodCode;
 
-                var invocation_name = GetUniqueName(nameSet, "invocation");
+                var invocation_name = nameHelper.ToUniqueName("invocation");
                 CodeSnippetStatement invocationCode = null;
                 if (parameterList.Length == 0)
                 {
@@ -244,32 +263,29 @@ namespace Clover.Proxy
                 }
                 else
                 {
-                    var typeArrayName = GetUniqueName(nameSet, "paramTypeList");
+                    var typeArrayName = nameHelper.ToUniqueName("paramTypeList");
                     methodCode.Statements.Add(new CodeSnippetStatement(string.Format("Type[] {0} = new Type[{1}];", typeArrayName, parameterList.Length)));
                     for (int i = 0; i < parameterList.Length; i++)
                     {
-                        CodeAssignStatement assCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, typeArrayName)), new CodeSnippetExpression(string.Format("typeof({0});", parameterList[i].ParameterType)));
-                        methodCode.Statements.Add(assCode);
+                        CodeAssignStatement assignCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, typeArrayName)), new CodeSnippetExpression(string.Format("typeof({0})", parameterList[i].ParameterType)));
+                        methodCode.Statements.Add(assignCode);
                     }
                     invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\", {3}), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name, typeArrayName));
                 }
 
                 methodCode.Statements.Add(invocationCode);
 
+                invokeMethodCode = new CodeMethodInvokeExpression();
+                invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteBeforeCall" };
+                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
+                methodCode.Statements.Add(invokeMethodCode);
 
-                if (this.BeforeCall != null)
-                {
-                    invokeMethodCode = new CodeMethodInvokeExpression();
-                    invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteBeforeCall" };
-                    invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
-                    invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
-                    methodCode.Statements.Add(invokeMethodCode);
-                }
                 methodCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
-                var temp_returnData = GetUniqueName(nameSet, "temp_returnData");
+                var temp_returnData = nameHelper.ToUniqueName("temp_returnData");
                 if (methodInfo.ReturnType != typeof(void))
                 {
-                    methodCode.Statements.Add(new CodeSnippetStatement(string.Format("var {0}=", temp_returnData)));
+                    methodCode.Statements.Add(new CodeSnippetStatement(string.Format("var {0} = ", temp_returnData)));
                 }
                 invokeMethodCode = new CodeMethodInvokeExpression();
                 invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "base." + methodInfo.Name };
@@ -282,14 +298,11 @@ namespace Clover.Proxy
                 CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{0}.ReturnValue", invocation_name)), new CodeVariableReferenceExpression(temp_returnData));
                 methodCode.Statements.Add(as11);
 
-                if (this.AfterCall != null)
-                {
-                    invokeMethodCode = new CodeMethodInvokeExpression();
-                    invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "AfterCall" };
-                    invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
-                    invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
-                    methodCode.Statements.Add(invokeMethodCode);
-                }
+                invokeMethodCode = new CodeMethodInvokeExpression();
+                invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteAfterCall" };
+                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
+                methodCode.Statements.Add(invokeMethodCode);
 
                 if (methodInfo.ReturnType != typeof(void))
                 {
@@ -298,7 +311,6 @@ namespace Clover.Proxy
                 }
 
                 wrapProxyClass.Members.Add(methodCode);
-
             }
         }
 
