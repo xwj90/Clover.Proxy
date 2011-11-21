@@ -24,11 +24,7 @@ namespace Sample
             {
                 Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
             };
-            var item = service.Create<TestWrapper>();
-            //item.GetAll(1, "213");
-            item.Name = 5;
-            //item.Name1 = null;
-
+            var item = service.Create<TestWrapper2>();
             ComplexClass cc = service.Create<ComplexClass>();
             cc.TestInt = 5;
             cc.TestString = "swc";
@@ -40,11 +36,12 @@ namespace Sample
             cc.TestNestClass = new ComplexClass.NestClass();
             cc.TestNestClass.A = 5;
 
+          
 
             var concurentDictionary = new ConcurrentDictionary<int, int>();
             int v = 0;
 
-            //Parallel.For(0, 1000, (i) =>
+            item.Test("111111");
             //   {
             //       var key = 1;
             //       var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
@@ -62,6 +59,7 @@ namespace Sample
         {
             public virtual int A { get; set; }
         }
+         
 
         public virtual int TestInt { get; set; }
         public virtual string TestString { get; set; }
@@ -104,6 +102,9 @@ namespace Sample
 
         public virtual string[] Name1 { get; set; }
     }
+
+    [Proxy(ProxyType = ProxyType.Remote)]
+    [Serializable]
     public class TestWrapper2
     {
         public virtual TestEntity Test(string s)
