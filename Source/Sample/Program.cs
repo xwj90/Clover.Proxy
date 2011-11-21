@@ -24,25 +24,10 @@ namespace Sample
             {
                 Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
             };
-            var item = service.Create<TestWrapper>();
-            //item.GetAll(1, "213");
-            item.Name = 5;
-            //item.Name1 = null;
-
-
-            var concurentDictionary = new ConcurrentDictionary<int, int>();
-            int v = 0;
-
-            Parallel.For(0, 1000, (i) =>
-               {
-                   var key = 1;
-                   var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
-                       {
-                           return Interlocked.Increment(ref v);
-                       });
-                   Console.WriteLine(returnValue);
-               });
-
+            var item = service.Create<TestWrapper2>();
+          
+            item.Test("111111");
+         
         }
     }
 
@@ -69,6 +54,9 @@ namespace Sample
 
         public virtual string[] Name1 { get; set; }
     }
+
+    [Proxy(ProxyType = ProxyType.Remote)]
+    [Serializable]
     public class TestWrapper2
     {
         public virtual TestEntity Test(string s)
