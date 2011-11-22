@@ -33,7 +33,7 @@ namespace Clover.Proxy
             var type = typeof(T);
             var assembly = assemblies.GetOrAdd(type, (t) =>
             {
-                return AssemblyGenerator.CreateLocalClassAssembly(type, proxyConfig, type.Assembly);
+                return AssemblyGenerator.CreateLocalClassAssembly(type, proxyConfig);
             });
             Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(type));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });
