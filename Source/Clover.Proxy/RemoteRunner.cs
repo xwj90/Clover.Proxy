@@ -12,9 +12,9 @@ namespace Clover.Proxy
     [Serializable]
     public class RemoteRunner<T> : MarshalByRefObject //where T : IWrapper
     {
-        private static Assembly EntityAssembly = null;
-        private static Assembly RemoteAssembly = null;
-        private static Lazy<AppDomain> domainInitializer = null;
+        private static Assembly EntityAssembly;
+        private static Assembly RemoteAssembly;
+        private static Lazy<AppDomain> domainInitializer;
 
         public static AppDomain Domain
         {
@@ -101,7 +101,7 @@ namespace Clover.Proxy
                 }
             }
 
-            appdomainSetup.ApplicationBase =new ProxyConfiguration().DllCachedPath;
+            appdomainSetup.ApplicationBase = new ProxyConfiguration().DllCachedPath;
             Evidence evidence = AppDomain.CurrentDomain.Evidence;
 
             AppDomain domain = AppDomain.CreateDomain("Domain Application " + type.Name, evidence, appdomainSetup);

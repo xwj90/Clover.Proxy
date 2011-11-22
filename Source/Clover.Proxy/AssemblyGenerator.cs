@@ -166,7 +166,7 @@ namespace Clover.Proxy
                     foreach (ParameterInfo input in item.GetParameters())
                     {
                         Type t = input.ParameterType;
-                        Situation situation = SituationHelper.GetSituation(t);
+                        //Situation situation = SituationHelper.GetSituation(t);
                         cs.Parameters.Add(new CodeSnippetExpression(input.Name));
                         // cs.Parameters.Add(new CodeSnippetExpression(SituationHelper.GetExpression(t, input.Name)));
                     }
@@ -478,7 +478,7 @@ WindowsIdentity_1024.Impersonate();
                 return;
 
             sample.Imports.Add(new CodeNamespaceImport(parameterType.Namespace));
-            var list = new List<CodeTypeDeclaration>();
+            //var list = new List<CodeTypeDeclaration>();
             string className = TypeInformation.GetEntityProxyClassName(parameterType);
             // SituationHelper.GetSerializableClassName(parameterType);
             var newEntity = new CodeTypeDeclaration(className);

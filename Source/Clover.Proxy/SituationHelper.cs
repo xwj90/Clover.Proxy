@@ -20,9 +20,9 @@ namespace Clover.Proxy
             return new Type[1] { type };
         }
 
-        public static string GetExpression(Type t, string key)
+        public static string GetExpression(Type type, string key)
         {
-            Situation situation = GetSituation(t);
+            Situation situation = GetSituation(type);
             string expression = "";
             switch (situation)
             {
@@ -37,12 +37,12 @@ namespace Clover.Proxy
                     }
                 case Situation.UNSerializable:
                     {
-                        expression = string.Format(" {0}==null ? null : new Serializable_{1}({0})", key, t.Name);
+                        expression = string.Format(" {0}==null ? null : new Serializable_{1}({0})", key, type.Name);
                         break;
                     }
                 case Situation.Array:
                     {
-                        Type[] types = GetInternalTypeFormArray(t);
+                        Type[] types = GetInternalTypeFormArray(type);
                         expression = string.Format(
                             " {0}==null ? null : {0}.ToList().ConvertAll(p => p = {1}).ToArray()", key,
                             GetExpression(types[0], "p"));
@@ -50,14 +50,14 @@ namespace Clover.Proxy
                     }
                 case Situation.IEnumerableOfT:
                     {
-                        Type[] types = GetInternalTypeFormArray(t);
+                        Type[] types = GetInternalTypeFormArray(type);
                         expression = string.Format(" {0}==null ? null : {0}.ToList().ConvertAll(p => p = {1}) ", key,
                                                    GetExpression(types[0], "p"));
                         break;
                     }
                 case Situation.Dictionary:
                     {
-                        Type[] types = GetInternalTypeFormArray(t);
+                        Type[] types = GetInternalTypeFormArray(type);
                         expression =
                             string.Format(" {0}==null ? null : {0}.ToDictionary(p => ({3})({1}) , p=> ({4})({2})) "
                                           , key
@@ -72,29 +72,29 @@ namespace Clover.Proxy
             return expression;
         }
 
-        public static Situation GetSituation(Type t)
+        public static Situation GetSituation(Type type)
         {
-            if (t.IsEnum)
+            if (type.IsEnum)
             {
                 return Situation.SerializableEnum;
             }
-            if (t == typeof(string))
+            if (type == typeof(string))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof(DateTime))
+            if (type == typeof(DateTime))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof(decimal))
+            if (type == typeof(decimal))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof(object))
+            if (type == typeof(object))
             {
                 return Situation.Serializable;
             }
-            if (t.IsPrimitive)
+            if (type.IsPrimitive)
             {
                 return Situation.Serializable;
             }
@@ -105,49 +105,49 @@ namespace Clover.Proxy
             //    return Situation.Serializable;
             //}
 
-            if (t.IsArray)
+            if (type.IsArray)
             {
-                if (GetSituation(t.GetElementType()) == Situation.Serializable)
+                if (GetSituation(type.GetElementType()) == Situation.Serializable)
                 {
                     return Situation.SerializableArray;
                 }
                 return Situation.Array;
             }
-            if (t.IsGenericType)
+            if (type.IsGenericType)
             {
-                if (t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
                     return Situation.IEnumerableOfT;
                 }
-                if (t.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                if (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
                     return Situation.IEnumerableOfT;
                 }
-                if (t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     return Situation.SerializableNullableT;
                 }
-                Type[] interfaces = t.GetGenericTypeDefinition().GetInterfaces();
+                Type[] interfaces = type.GetGenericTypeDefinition().GetInterfaces();
 
                 foreach (Type @interface in interfaces)
                 {
                     if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
-                        if (IsSerializable(GetSituation(t.GetGenericArguments()[0])))
+                        if (IsSerializable(GetSituation(type.GetGenericArguments()[0])))
                             return Situation.SerializableIEnumerableOfT;
                         else
                             return Situation.IEnumerableOfT;
                     }
                     if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     {
-                        if (t.GetGenericArguments().Any(p => !IsSerializable(GetSituation(p))))
+                        if (type.GetGenericArguments().Any(p => !IsSerializable(GetSituation(p))))
                             return Situation.Dictionary;
                         else
                             return Situation.SerializableDictionary;
                     }
                 }
             }
-            if (t.IsClass && t.IsSerializable)
+            if (type.IsClass && type.IsSerializable)
             {
                 return Situation.Serializable;
             }
@@ -159,7 +159,7 @@ namespace Clover.Proxy
             return (situation & Situation.Serializable) != 0;
         }
 
-        public static bool IsSerialzable(Type type)
+        public static bool IsSerializable(Type type)
         {
             return IsSerializable(GetSituation(type));
         }
@@ -182,14 +182,18 @@ namespace Clover.Proxy
 
         public static Type GetRealType(MemberInfo member)
         {
-            if (member is FieldInfo)
+            var fieldInfo = member as FieldInfo;
+            if (fieldInfo != null)
             {
-                return (member as FieldInfo).FieldType;
+                return fieldInfo.FieldType;
             }
-            if (member is PropertyInfo)
+
+            var propertyType = member as PropertyInfo;
+            if (propertyType != null)
             {
-                return (member as PropertyInfo).PropertyType;
+                return propertyType.PropertyType;
             }
+            
             return member.DeclaringType;
         }
 
@@ -229,13 +233,12 @@ namespace Clover.Proxy
             return new Type[0];
         }
 
-
         public static string GetMethodName(Type type)
         {
             return GetMethodName(type, true);
         }
 
-        public static string GetMethodName(Type type, bool inclduPrefix)
+        public static string GetMethodName(Type type, bool includePrefix)
         {
             string typeName = null;
             if (type == typeof(string))
@@ -244,7 +247,7 @@ namespace Clover.Proxy
                 typeName = "Int32";
             else
                 typeName = type.Name;
-            if (inclduPrefix)
+            if (includePrefix)
                 return "Get" + typeName;
             else
                 return typeName;
