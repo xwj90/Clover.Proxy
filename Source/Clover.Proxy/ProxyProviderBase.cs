@@ -4,26 +4,26 @@ namespace Clover.Proxy
 {
     public class ProxyProviderBase
     {
-        protected ProxyConfiguration proxyConfig;
+        protected ProxyConfiguration proxyConfig { get; set; }
+        public Action<Invocation> BeforeCall { get; set; }
+        public Action<Invocation> AfterCall { get; set; }
+
+        public ProxyProviderBase() : this(null) { }
 
         public ProxyProviderBase(ProxyConfiguration config)
         {
             this.proxyConfig = config;
-            //todo:ProxyConfiguration修改
-            this.BeforeCall = config.BeforeCall;
-            this.AfterCall = config.AfterCall;
+            if (config != null)
+            {
+                this.BeforeCall = config.BeforeCall;
+                this.AfterCall = config.AfterCall;
+            }
         }
-        public ProxyProviderBase() { }
-        #region IProxyProvider Members
-
-        public Action<Invocation> BeforeCall { get; set; }
-        public Action<Invocation> AfterCall { get; set; }
 
         public virtual T CreateInstance<T>()
         {
             throw new NotImplementedException("you have to override CreateInstance<T> method!");
         }
-
 
         public void ExecuteBeforeCall(Invocation invocation)
         {
@@ -40,6 +40,5 @@ namespace Clover.Proxy
                 AfterCall(invocation);
             }
         }
-        #endregion
     }
 }

@@ -12,13 +12,13 @@ namespace Clover.Proxy
     [Serializable]
     public class RemoteRunner<T> : MarshalByRefObject //where T : IWrapper
     {
-        private static Assembly EntityAssembly;
-        private static Assembly RemoteAssembly;
-        private static Lazy<AppDomain> _Domain = new Lazy<AppDomain>(InitDomain);
+        private static Assembly EntityAssembly = null;
+        private static Assembly RemoteAssembly = null;
+        private static Lazy<AppDomain> domainInitializer = null;
 
         public static AppDomain Domain
         {
-            get { return _Domain.Value; }
+            get { return domainInitializer.Value; }
         }
 
         static RemoteRunner()
@@ -36,7 +36,6 @@ namespace Clover.Proxy
                 {
                     try
                     {
-                        string name = Domain.FriendlyName;
                         _remoteT = (T)Domain.CreateInstanceAndUnwrap(RemoteAssembly.FullName, TypeInformation.GetRemoteProxyClassFullName(typeof(T)));
                     }
                     catch
@@ -58,8 +57,8 @@ namespace Clover.Proxy
             try
             {
                 var config = new ProxyConfiguration();
-                EntityAssembly = Assembly.LoadFile(config.DllCachedPath + typeof(T).FullName + ".Entity.dll"); //AssemblyGenerator.CreateEntityAssembly(typeof(T), new ProxyConfiguration());
-                //LocalAssembly = AssemblyHelper<T>.CreateLocalAssembly(EntityAssembly);
+                domainInitializer = new Lazy<AppDomain>(InitDomain);
+                EntityAssembly = Assembly.LoadFile(config.DllCachedPath + typeof(T).FullName + ".Entity.dll");
                 RemoteAssembly = AssemblyGenerator.CreateRemoteAssembly(typeof(T), config, EntityAssembly);
             }
             catch (Exception)
@@ -70,9 +69,9 @@ namespace Clover.Proxy
 
         private static AppDomain InitDomain()
         {
-            Type CurrentType = typeof(T);
+            Type type = typeof(T);
             var appdomainSetup = new AppDomainSetup();
-            string filePath = Path.GetDirectoryName(AssemblyHelper<T>.DllCachePath) + @"\" + CurrentType.FullName + ".config";
+            string filePath = Path.GetDirectoryName(AssemblyHelper<T>.DllCachePath) + @"\" + type.FullName + ".config";
 
             if (File.Exists(filePath))
             {
@@ -80,43 +79,33 @@ namespace Clover.Proxy
             }
             else
             {
-                using (Stream templateStream =
-                        CurrentType.Assembly.GetManifestResourceStream(CurrentType.Namespace + ".Wrapper.Template.config"))
+                using (Stream templateStream = type.Assembly.GetManifestResourceStream(type.Namespace + ".Wrapper.Template.config"))
                 {
                     if (templateStream != null)
                     {
-                        using (Stream stream = CurrentType.Assembly.GetManifestResourceStream(CurrentType.Namespace + "." + CurrentType.Name + ".config"))
+                        using (Stream stream = type.Assembly.GetManifestResourceStream(type.Namespace + "." + type.Name + ".config"))
                         {
-                            var xmlDoc = new XmlDocument();
-                            xmlDoc.Load(templateStream);
+                            var sourceDocument = new XmlDocument();
+                            sourceDocument.Load(templateStream);
                             if (stream != null)
                             {
-                                var xmlDoc2 = new XmlDocument();
-                                xmlDoc2.Load(stream);
-                                ConfigurationFileHelper.Merge(ref xmlDoc, ref xmlDoc2);
+                                var targetDocument = new XmlDocument();
+                                targetDocument.Load(stream);
+                                ConfigurationFileHelper.Merge(ref sourceDocument, ref targetDocument);
                             }
 
-                            File.WriteAllText(filePath, xmlDoc.OuterXml);
+                            File.WriteAllText(filePath, sourceDocument.OuterXml);
                             appdomainSetup.ConfigurationFile = filePath;
                         }
                     }
-                    else
-                    {
-                        // appdomainSetup.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
-                    }
                 }
             }
-            //Mem.ServiceAccount}
+
             appdomainSetup.ApplicationBase = AssemblyHelper<T>.DllCachePath;
             Evidence evidence = AppDomain.CurrentDomain.Evidence;
 
-            AppDomain a = AppDomain.CreateDomain("Domain Application " + CurrentType.Name, evidence, appdomainSetup);
-            string name = a.FriendlyName;
-            return a;
-
-
+            AppDomain domain = AppDomain.CreateDomain("Domain Application " + type.Name, evidence, appdomainSetup);
+            return domain;
         }
-
-
     }
 }
