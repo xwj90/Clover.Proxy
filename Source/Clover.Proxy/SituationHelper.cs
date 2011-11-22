@@ -182,14 +182,10 @@ namespace Clover.Proxy
 
         public static Type GetRealType(MemberInfo member)
         {
-            if (member is FieldInfo)
-            {
-                return (member as FieldInfo).FieldType;
-            }
-            if (member is PropertyInfo)
-            {
-                return (member as PropertyInfo).PropertyType;
-            }
+            var fieldInfo = member as FieldInfo;
+            if (fieldInfo != null) return fieldInfo.FieldType;
+            var propertyInfo = member as PropertyInfo;
+            if (propertyInfo != null) return propertyInfo.PropertyType;
             return member.DeclaringType;
         }
 
