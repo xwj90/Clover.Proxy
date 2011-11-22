@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Clover.Proxy.OldDesign
+namespace Clover.Proxy
 {
     public class SituationHelper
     {
@@ -15,9 +15,9 @@ namespace Clover.Proxy.OldDesign
             }
             else if (type.IsArray)
             {
-                return new Type[1] {type.GetElementType()};
+                return new Type[1] { type.GetElementType() };
             }
-            return new Type[1] {type};
+            return new Type[1] { type };
         }
 
         public static string GetExpression(Type t, string key)
@@ -78,19 +78,19 @@ namespace Clover.Proxy.OldDesign
             {
                 return Situation.SerializableEnum;
             }
-            if (t == typeof (string))
+            if (t == typeof(string))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof (DateTime))
+            if (t == typeof(DateTime))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof (decimal))
+            if (t == typeof(decimal))
             {
                 return Situation.Serializable;
             }
-            if (t == typeof (object))
+            if (t == typeof(object))
             {
                 return Situation.Serializable;
             }
@@ -115,15 +115,15 @@ namespace Clover.Proxy.OldDesign
             }
             if (t.IsGenericType)
             {
-                if (t.GetGenericTypeDefinition() == typeof (IEnumerable<>))
+                if (t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
                     return Situation.IEnumableT;
                 }
-                if (t.GetGenericTypeDefinition() == typeof (IDictionary<,>))
+                if (t.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
                     return Situation.IEnumableT;
                 }
-                if (t.GetGenericTypeDefinition() == typeof (Nullable<>))
+                if (t.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     return Situation.SerializableNullableT;
                 }
@@ -131,14 +131,14 @@ namespace Clover.Proxy.OldDesign
 
                 foreach (Type @interface in interfaces)
                 {
-                    if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof (IEnumerable<>))
+                    if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
                         if (IsSerialzable(GetSituation(t.GetGenericArguments()[0])))
                             return Situation.SerializableIEnumableT;
                         else
                             return Situation.IEnumableT;
                     }
-                    if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof (IDictionary<,>))
+                    if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     {
                         if (t.GetGenericArguments().Any(p => !IsSerialzable(GetSituation(p))))
                             return Situation.Dictionary;
@@ -199,7 +199,7 @@ namespace Clover.Proxy.OldDesign
             {
                 case Situation.Array:
                     {
-                        return new[] {t.GetElementType()};
+                        return new[] { t.GetElementType() };
                     }
                 case Situation.Dictionary:
                     {
@@ -223,7 +223,7 @@ namespace Clover.Proxy.OldDesign
                     }
                 case Situation.UnSerializable:
                     {
-                        return new[] {t};
+                        return new[] { t };
                     }
             }
             return new Type[0];
@@ -238,9 +238,9 @@ namespace Clover.Proxy.OldDesign
         public static string GetMethodName(Type type, bool inclduPrefix)
         {
             string typeName = null;
-            if (type == typeof (string))
+            if (type == typeof(string))
                 typeName = "String";
-            else if (type == typeof (Int32))
+            else if (type == typeof(Int32))
                 typeName = "Int32";
             else
                 typeName = type.Name;

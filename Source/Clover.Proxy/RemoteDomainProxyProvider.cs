@@ -1,15 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Reflection;
 using System.Collections.Generic;
-using Clover.Proxy.OldDesign;
-using System.CodeDom;
-using System.Linq;
-using System.Runtime.Serialization;
-using Microsoft.CSharp;
-using System.Text;
-using System.IO;
-using System.CodeDom.Compiler;
+using System.Reflection;
 namespace Clover.Proxy
 {
     internal class RemoteDomainProxyProvider : ProxyProviderBase

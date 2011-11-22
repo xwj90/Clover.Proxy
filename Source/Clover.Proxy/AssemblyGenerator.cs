@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Collections.Generic;
-using Clover.Proxy.OldDesign;
+using Clover.Proxy;
 using System.CodeDom;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -25,7 +25,7 @@ namespace Clover.Proxy
             sample.Imports.Add(new CodeNamespaceImport("System.Linq"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
-            sample.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
+            sample.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
             sample.Imports.Add(new CodeNamespaceImport(type.Namespace));
             foreach (var assembly in dependAssemblies)
             {
@@ -64,7 +64,7 @@ namespace Clover.Proxy
             var cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
-            cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(RemoteRunner<>).Assembly.Location));
             cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(type.Assembly.Location));
             cp.OutputAssembly = config.DllCachedPath + type.FullName + ".Entity.dll";
             cp.GenerateInMemory = false;
@@ -192,7 +192,7 @@ namespace Clover.Proxy
             var cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
-            cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            //cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
             cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(RemoteRunner<>).Assembly.Location));
             cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(type.Assembly.Location));
             //cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
@@ -247,8 +247,8 @@ namespace Clover.Proxy
             sample.Imports.Add(new CodeNamespaceImport("System.Threading"));
 
 
-            sample.Imports.Add(new CodeNamespaceImport(typeof(ServiceContext).Namespace));
-            sample.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
+            //sample.Imports.Add(new CodeNamespaceImport(typeof(ServiceContext).Namespace));
+            sample.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
             foreach (var assembly in dependAssemblies)
             {
                 foreach (Type item in assembly.GetTypes())
@@ -399,7 +399,7 @@ WindowsIdentity_1024.Impersonate();
 
             cp.ReferencedAssemblies.Add("System.dll");
             cp.ReferencedAssemblies.Add("System.Core.dll");
-            cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(RemoteRunner<>).Assembly.Location));
             cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(type.Assembly.Location));
             //cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(InterfaceAssembly.Location));
             //RefComponents(cp, EntityTypes);
@@ -796,7 +796,7 @@ this.{0}= {1}; ", item.Name,
             var compilerParameters = new CompilerParameters();
             compilerParameters.ReferencedAssemblies.Add("System.dll");
             compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
-            compilerParameters.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            compilerParameters.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(RemoteRunner<>).Assembly.Location));
             compilerParameters.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(proxyedType.Assembly.Location));
             //compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
 
@@ -825,7 +825,7 @@ this.{0}= {1}; ", item.Name,
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Linq"));
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections"));
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
-            codeNamespace.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
+            codeNamespace.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
             //foreach (Type item in InterfaceAssembly.GetTypes())
             //{
             //    codeNamespace.Imports.Add(new CodeNamespaceImport(item.Namespace));

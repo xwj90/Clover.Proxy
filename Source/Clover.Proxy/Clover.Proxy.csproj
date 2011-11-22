@@ -60,9 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyGenerator.cs" />
-    <Compile Include="OldDesign\AssemblyHelper.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="ConfigurationFileHelper.cs" />
+    <Compile Include="Situation.cs" />
+    <Compile Include="SituationHelper.cs" />
+    <Compile Include="TypeInformation.cs" />
     <Compile Include="ProxyException.cs" />
     <Compile Include="RemoteRunner.cs" />
     <Compile Include="Invocation.cs" />
@@ -71,29 +72,14 @@
     <Compile Include="RemoteDomainProxyProvider.cs" />
     <Compile Include="DeafultProxyProvider.cs" />
     <Compile Include="ProxyProviderBase.cs" />
-    <Compile Include="OldDesign\BaseWrapper.cs" />
-    <Compile Include="OldDesign\BinaryExtensions.cs" />
-    <Compile Include="OldDesign\ConfigurationFileHelper.cs" />
-    <Compile Include="OldDesign\AuthenticatedUser.cs" />
-    <Compile Include="OldDesign\Configuration.cs" />
     <Compile Include="ProxyService.cs" />
-    <Compile Include="OldDesign\EventHandler.cs" />
-    <Compile Include="OldDesign\ErrorCode.cs" />
-    <Compile Include="OldDesign\ErrorService.cs" />
-    <Compile Include="OldDesign\IWrapper.cs" />
-    <Compile Include="OldDesign\LogCategory.cs" />
-    <Compile Include="OldDesign\LogEntry.cs" />
-    <Compile Include="OldDesign\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="OldDesign\ServiceContext.cs" />
-    <Compile Include="OldDesign\Situation.cs" />
-    <Compile Include="OldDesign\SituationHelper.cs" />
-    <Compile Include="OldDesign\TypeInformation.cs" />
     <Compile Include="UniqueNameHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Clover.pfx" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

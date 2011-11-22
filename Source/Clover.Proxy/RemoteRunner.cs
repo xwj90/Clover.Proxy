@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Clover.Proxy.OldDesign;
+using Clover.Proxy;
 using System.IO;
 using System.Xml;
 using System.Security.Policy;
@@ -71,7 +71,7 @@ namespace Clover.Proxy
         {
             Type type = typeof(T);
             var appdomainSetup = new AppDomainSetup();
-            string filePath = Path.GetDirectoryName(AssemblyHelper<T>.DllCachePath) + @"\" + type.FullName + ".config";
+            string filePath = Path.GetDirectoryName(new ProxyConfiguration().DllCachedPath) + @"\" + type.FullName + ".config";
 
             if (File.Exists(filePath))
             {
@@ -101,7 +101,7 @@ namespace Clover.Proxy
                 }
             }
 
-            appdomainSetup.ApplicationBase = AssemblyHelper<T>.DllCachePath;
+            appdomainSetup.ApplicationBase =new ProxyConfiguration().DllCachedPath;
             Evidence evidence = AppDomain.CurrentDomain.Evidence;
 
             AppDomain domain = AppDomain.CreateDomain("Domain Application " + type.Name, evidence, appdomainSetup);

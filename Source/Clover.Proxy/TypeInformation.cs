@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Clover.Proxy.OldDesign
+namespace Clover.Proxy
 {
     public class TypeInformation
     {

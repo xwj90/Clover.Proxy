@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace Clover.Proxy.OldDesign
+namespace Clover.Proxy
 {
     /// <summary>
     /// Provides an feature to modify configuration file.
