@@ -71,14 +71,14 @@ namespace Clover.Proxy
 
         private Assembly CreateLocalAssembly<T>(Assembly entityAssembly)
         {
-            Type proxyedType = typeof(T);
-            string localClassName = TypeInformation.GetLocalProxyClassName(proxyedType);
+            Type type = typeof(T);
+            string localClassName = TypeInformation.GetLocalProxyClassName(type);
 
             var codeUnit = new CodeCompileUnit();
-            var codeNamespace = CreateNSAndImportInitNS(proxyedType, codeUnit);
+            var codeNamespace = CreateNSAndImportInitNS(type, codeUnit);
 
             var wrapProxyClass = new CodeTypeDeclaration(localClassName);
-            wrapProxyClass.BaseTypes.Add(proxyedType);
+            wrapProxyClass.BaseTypes.Add(type);
             //todo:must be Serializable?
             wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
             codeNamespace.Types.Add(wrapProxyClass);
@@ -95,8 +95,8 @@ namespace Clover.Proxy
             constructor.Statements.Add(new CodeVariableReferenceExpression("this._proxyBaseType = this.GetType().BaseType;"));
             wrapProxyClass.Members.Add(constructor);
 
-            OverrideMethods(proxyedType, wrapProxyClass);
-            OverrideProperties(proxyedType, wrapProxyClass);
+            OverrideMethods(type, wrapProxyClass);
+            OverrideProperties(type, wrapProxyClass);
 
             var cprovider = new CSharpCodeProvider();
             var fileContent = new StringBuilder();
@@ -105,9 +105,9 @@ namespace Clover.Proxy
                 cprovider.GenerateCodeFromCompileUnit(codeUnit, sw, new CodeGeneratorOptions());
             }
 
-            var compilerParameters = CreateCompilerParameters(proxyedType);
+            var compilerParameters = CreateCompilerParameters(type);
 
-            string filePath = DLLCachedPath + @"Class\" + proxyedType.Namespace + "." + proxyedType.Name + ".Local.cs";
+            string filePath = DLLCachedPath + @"Class\" + type.Namespace + "." + type.Name + ".Local.cs";
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.WriteAllText(filePath, fileContent.ToString());
@@ -135,12 +135,12 @@ namespace Clover.Proxy
             compilerParameters.ReferencedAssemblies.Add(DLLCachedPath + Path.GetFileName(proxyedType.Assembly.Location));
             //compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
 
-            foreach (string file in Directory.GetFiles(DLLCachedPath, "*.dll"))
-            {
-                if (file.ToUpper().StartsWith("Clover."))
-                    continue;
-                compilerParameters.ReferencedAssemblies.Add(file);
-            }
+            //foreach (string file in Directory.GetFiles(DLLCachedPath, "*.dll"))
+            //{
+            //    if (file.ToUpper().StartsWith("Clover."))
+            //        continue;
+            //    compilerParameters.ReferencedAssemblies.Add(file);
+            //}
 
             compilerParameters.OutputAssembly = DLLCachedPath + proxyedType.FullName + ".Local.dll";
             compilerParameters.GenerateInMemory = false;
