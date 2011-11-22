@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Clover.Proxy
 {
-    public class SituationHelper
+    public static class SituationHelper
     {
         public static Type[] GetInternalTypeFormArray(Type type)
         {
@@ -29,13 +29,13 @@ namespace Clover.Proxy
                 case Situation.SerializableNullableT:
                 case Situation.Serializable:
                 case Situation.SerializableArray:
-                case Situation.SerializableIEnumableT:
-                case Situation.SerializableDirtionary:
+                case Situation.SerializableIEnumerableOfT:
+                case Situation.SerializableDictionary:
                     {
                         expression = key;
                         break;
                     }
-                case Situation.UnSerializable:
+                case Situation.UNSerializable:
                     {
                         expression = string.Format(" {0}==null ? null : new Serializable_{1}({0})", key, t.Name);
                         break;
@@ -48,7 +48,7 @@ namespace Clover.Proxy
                             GetExpression(types[0], "p"));
                         break;
                     }
-                case Situation.IEnumableT:
+                case Situation.IEnumerableOfT:
                     {
                         Type[] types = GetInternalTypeFormArray(t);
                         expression = string.Format(" {0}==null ? null : {0}.ToList().ConvertAll(p => p = {1}) ", key,
@@ -117,11 +117,11 @@ namespace Clover.Proxy
             {
                 if (t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    return Situation.IEnumableT;
+                    return Situation.IEnumerableOfT;
                 }
                 if (t.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
-                    return Situation.IEnumableT;
+                    return Situation.IEnumerableOfT;
                 }
                 if (t.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
@@ -133,17 +133,17 @@ namespace Clover.Proxy
                 {
                     if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
-                        if (IsSerialzable(GetSituation(t.GetGenericArguments()[0])))
-                            return Situation.SerializableIEnumableT;
+                        if (IsSerializable(GetSituation(t.GetGenericArguments()[0])))
+                            return Situation.SerializableIEnumerableOfT;
                         else
-                            return Situation.IEnumableT;
+                            return Situation.IEnumerableOfT;
                     }
                     if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     {
-                        if (t.GetGenericArguments().Any(p => !IsSerialzable(GetSituation(p))))
+                        if (t.GetGenericArguments().Any(p => !IsSerializable(GetSituation(p))))
                             return Situation.Dictionary;
                         else
-                            return Situation.SerializableDirtionary;
+                            return Situation.SerializableDictionary;
                     }
                 }
             }
@@ -151,17 +151,17 @@ namespace Clover.Proxy
             {
                 return Situation.Serializable;
             }
-            return Situation.UnSerializable;
+            return Situation.UNSerializable;
         }
 
-        public static bool IsSerialzable(Situation situation)
+        public static bool IsSerializable(Situation situation)
         {
             return (situation & Situation.Serializable) != 0;
         }
 
         public static bool IsSerialzable(Type type)
         {
-            return IsSerialzable(GetSituation(type));
+            return IsSerializable(GetSituation(type));
         }
 
         public static IEnumerable<MemberInfo> GetMembers(Type type)
@@ -193,37 +193,37 @@ namespace Clover.Proxy
             return member.DeclaringType;
         }
 
-        public static Type[] GetToBeSerializableTypes(Type t)
+        public static Type[] GetToBeSerializableTypes(Type type)
         {
-            switch (GetSituation(t))
+            switch (GetSituation(type))
             {
                 case Situation.Array:
                     {
-                        return new[] { t.GetElementType() };
+                        return new[] { type.GetElementType() };
                     }
                 case Situation.Dictionary:
                     {
-                        return t.GetGenericArguments();
+                        return type.GetGenericArguments();
                     }
-                case Situation.IEnumableT:
+                case Situation.IEnumerableOfT:
                     {
-                        return t.GetGenericArguments();
+                        return type.GetGenericArguments();
                     }
                 case Situation.SerializableNullableT:
                     {
-                        return t.GetGenericArguments();
+                        return type.GetGenericArguments();
                     }
                 case Situation.SerializableEnum:
                     {
                         return new Type[0];
                     }
-                case Situation.SerializableDirtionary:
+                case Situation.SerializableDictionary:
                     {
                         return new Type[0];
                     }
-                case Situation.UnSerializable:
+                case Situation.UNSerializable:
                     {
-                        return new[] { t };
+                        return new[] { type };
                     }
             }
             return new Type[0];

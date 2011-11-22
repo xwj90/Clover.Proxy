@@ -2,20 +2,17 @@
 {
     public enum Situation
     {
-        UnSerializable = 2,
+        Unknown = 0,
+        UNSerializable = 2,
         Array = 4,
-        IEnumableT = 8,
+        IEnumerableOfT = 8,
         //NullableT = 17,
-
         Dictionary = 32,
-
-
         Serializable = 1,
         SerializableArray = 5,
-        SerializableIEnumableT = 9,
+        SerializableIEnumerableOfT = 9,
         SerializableNullableT = 17,
-        SerializableDirtionary = 33,
-
+        SerializableDictionary = 33,
         SerializableEnum = 65,
     }
 }

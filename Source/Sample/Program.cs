@@ -9,7 +9,7 @@ namespace Sample
     {
         private static void Main(string[] args)
         {
-
+           
             //new design
             //simple
             var service = new ProxyService();
