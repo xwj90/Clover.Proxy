@@ -26,14 +26,14 @@ namespace Clover.Proxy
 
         public override T CreateInstance<T>()
         {
-            if (proxyConfig.DisableAutoProxy)
+            if (ProxyConfig.DisableAutoProxy)
             {
                 return (T)Activator.CreateInstance(typeof(T));
             }
             var type = typeof(T);
             var assembly = assemblies.GetOrAdd(type, (t) =>
             {
-                return AssemblyGenerator.CreateLocalClassAssembly(type, proxyConfig, type.Assembly);
+                return AssemblyGenerator.CreateLocalClassAssembly(type, ProxyConfig, type.Assembly);
             });
             Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(type));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });

@@ -7,29 +7,9 @@ namespace Clover.Proxy
     /// <summary>
     /// Provides an feature to modify configuration file.
     /// </summary>
-    public class ConfigurationFileHelper
+    internal static class ConfigurationFileHelper
     {
-        private static Dictionary<string, string> conns;
-
-        public static Dictionary<string, string> ConnectionStrings
-        {
-            get
-            {
-                if (conns == null)
-                {
-                    var xmldoc = new XmlDocument();
-                    xmldoc.Load(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
-                    conns = new Dictionary<string, string>();
-                    foreach (XmlNode node in xmldoc.SelectNodes("/configuration/databaseSettings/*"))
-                    {
-                        conns[node.Attributes["key"].Value] = node.Attributes["value"].Value;
-                    }
-                }
-                return conns;
-            }
-        }
-
-        public static void Merge(ref XmlDocument xmlDoc, ref XmlDocument xmlDoc2)
+        internal static void Merge(ref XmlDocument xmlDoc, ref XmlDocument xmlDoc2)
         {
             Merge(ref xmlDoc, ref xmlDoc2, "configuration/appSettings", "add", "key");
             Merge(ref xmlDoc, ref xmlDoc2, "configuration/HibernateMappingAssemblies", "add", "key");
