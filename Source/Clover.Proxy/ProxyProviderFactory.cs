@@ -1,6 +1,6 @@
 ﻿namespace Clover.Proxy
 {
-    public class ProxyProviderFactory
+    internal static class ProxyProviderFactory
     {
         internal static ProxyProviderBase CreateProvider (ProxyConfiguration proxyConfiguration)
         {

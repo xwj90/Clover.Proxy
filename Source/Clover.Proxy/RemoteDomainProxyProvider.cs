@@ -7,12 +7,11 @@ namespace Clover.Proxy
     internal class RemoteDomainProxyProvider : ProxyProviderBase
     {
         private static ConcurrentDictionary<Type, Dictionary<AssemblyType, Assembly>> cachedAssemblies = new ConcurrentDictionary<Type, Dictionary<AssemblyType, Assembly>>();
-        private ProxyConfiguration defaultConfiguration = null;
-
+        
         public RemoteDomainProxyProvider(ProxyConfiguration config)
             : base(config)
         {
-            defaultConfiguration = config;
+            
         }
 
         public override T CreateInstance<T>()

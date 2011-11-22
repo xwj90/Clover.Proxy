@@ -165,8 +165,8 @@ namespace Clover.Proxy
                     cs.Method = new CodeMethodReferenceExpression { MethodName = "RemoteRunner<" + type.Name + ">.RemoteT." + item.Name };
                     foreach (ParameterInfo input in item.GetParameters())
                     {
-                        Type t = input.ParameterType;
-                        Situation situation = SituationHelper.GetSituation(t);
+                        //Type t = input.ParameterType;
+                        //Situation situation = SituationHelper.GetSituation(t);
                         cs.Parameters.Add(new CodeSnippetExpression(input.Name));
                         // cs.Parameters.Add(new CodeSnippetExpression(SituationHelper.GetExpression(t, input.Name)));
                     }
@@ -470,7 +470,7 @@ WindowsIdentity_1024.Impersonate();
             Situation currentSitucation = SituationHelper.GetSituation(parameterType);
 
             //Namespaces.Add(parameterType.Namespace);
-            if (currentSitucation != Situation.UnSerializable)
+            if (currentSitucation != Situation.UNSerializable)
                 return;
 
 
@@ -478,7 +478,7 @@ WindowsIdentity_1024.Impersonate();
                 return;
 
             sample.Imports.Add(new CodeNamespaceImport(parameterType.Namespace));
-            var list = new List<CodeTypeDeclaration>();
+            //var list = new List<CodeTypeDeclaration>();
             string className = TypeInformation.GetEntityProxyClassName(parameterType);
             // SituationHelper.GetSerializableClassName(parameterType);
             var newEntity = new CodeTypeDeclaration(className);
@@ -505,13 +505,13 @@ WindowsIdentity_1024.Impersonate();
                     case Situation.SerializableNullableT:
                     case Situation.Serializable:
                     case Situation.SerializableArray:
-                    case Situation.SerializableIEnumableT:
-                    case Situation.SerializableDirtionary:
+                    case Situation.SerializableIEnumerableOfT:
+                    case Situation.SerializableDictionary:
                         {
                             code += Environment.NewLine + string.Format(" info.AddValue(\"{0}\", {0});", item.Name);
                             break;
                         }
-                    case Situation.UnSerializable:
+                    case Situation.UNSerializable:
                         {
                             code += Environment.NewLine +
                                     string.Format(
@@ -527,7 +527,7 @@ WindowsIdentity_1024.Impersonate();
                                         item.Name, SituationHelper.GetInternalTypeFormArray(type)[0].Name);
                             break;
                         }
-                    case Situation.IEnumableT:
+                    case Situation.IEnumerableOfT:
                         {
                             code += Environment.NewLine +
                                     string.Format(
@@ -562,13 +562,13 @@ WindowsIdentity_1024.Impersonate();
                     case Situation.SerializableArray:
                     case Situation.SerializableNullableT:
                     case Situation.Serializable:
-                    case Situation.SerializableIEnumableT:
-                    case Situation.SerializableDirtionary:
+                    case Situation.SerializableIEnumerableOfT:
+                    case Situation.SerializableDictionary:
                         {
                             code += Environment.NewLine + string.Format(" this.{0}=value.{0};", item.Name);
                             break;
                         }
-                    case Situation.UnSerializable:
+                    case Situation.UNSerializable:
                         {
                             code += Environment.NewLine +
                                     string.Format(@"
@@ -588,7 +588,7 @@ this.{0}= value.{0}.ToList().ConvertAll<{1}>(p => p==null ? null:  new Serializa
                             break;
                         }
 
-                    case Situation.IEnumableT:
+                    case Situation.IEnumerableOfT:
                         {
                             code += Environment.NewLine +
                                     string.Format(
@@ -644,7 +644,7 @@ this.{0}= {1}; ", item.Name,
                                                   SituationHelper.GetMethodName(type, false));
                             break;
                         }
-                    case Situation.UnSerializable:
+                    case Situation.UNSerializable:
                         {
                             code += Environment.NewLine +
                                     string.Format(" this.{0}=({1})info.GetValue(\"{0}\",typeof({1}));", item.Name,
@@ -659,8 +659,8 @@ this.{0}= {1}; ", item.Name,
                                         item.Name, SituationHelper.GetMethodName(type.GetGenericArguments()[0]));
                             break;
                         }
-                    case Situation.IEnumableT:
-                    case Situation.SerializableIEnumableT:
+                    case Situation.IEnumerableOfT:
+                    case Situation.SerializableIEnumerableOfT:
                         {
                             string enumableType = type.GetGenericTypeDefinition().Name.Substring(0,
                                                                                                  type.
@@ -675,7 +675,7 @@ this.{0}= {1}; ", item.Name,
                         }
 
                     case Situation.Dictionary:
-                    case Situation.SerializableDirtionary:
+                    case Situation.SerializableDictionary:
                         {
                             string enumableType = type.GetGenericTypeDefinition().Name.Substring(0,
                                                                                                  type.
@@ -704,7 +704,7 @@ this.{0}= {1}; ", item.Name,
             switch (s)
             {
                 case Situation.Dictionary:
-                case Situation.SerializableDirtionary:
+                case Situation.SerializableDictionary:
                     {
                         if (t.IsGenericType)
                         {
@@ -716,8 +716,8 @@ this.{0}= {1}; ", item.Name,
                         }
                         break;
                     }
-                case Situation.IEnumableT:
-                case Situation.SerializableIEnumableT:
+                case Situation.IEnumerableOfT:
+                case Situation.SerializableIEnumerableOfT:
                     {
                         if (t.IsGenericType)
                         {

@@ -9,7 +9,7 @@ namespace Sample
     {
         private static void Main(string[] args)
         {
-
+           
             //new design
             //simple
             var service = new ProxyService();
@@ -38,7 +38,7 @@ namespace Sample
             item.Test("111111");
 
             var concurentDictionary = new ConcurrentDictionary<int, int>();
-            int v = 0;
+            //int v = 0;
 
             item.Test("111111");
             //   {
