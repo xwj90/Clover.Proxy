@@ -17,14 +17,19 @@ namespace Clover.Proxy
         public Action<Invocation> BeforeCall { get; set; }
         public Action<Invocation> AfterCall { get; set; }
         public ProxyType ProxyType { get; set; }
-        public Dictionary<string, bool> MemberAutoProxyStatus = new Dictionary<string, bool>();
+        public Dictionary<string, bool> MemberAutoProxyStatus { get; set; }
 
-        private static ConcurrentDictionary<Type, ProxyConfiguration> configurations = new ConcurrentDictionary<Type, ProxyConfiguration>();
-        
+        private static ConcurrentDictionary<Type, ProxyConfiguration> configurations;
+
+        static ProxyConfiguration()
+        {
+            configurations = new ConcurrentDictionary<Type, ProxyConfiguration>();
+        }
+
         public ProxyConfiguration()
             : this(null)
         {
-
+            MemberAutoProxyStatus = new Dictionary<string, bool>();
         }
         private ProxyConfiguration(ProxyAttribute attribute)
         {
@@ -82,7 +87,8 @@ namespace Clover.Proxy
         }
     }
 
-    public class ProxyAttribute : Attribute
+    [AttributeUsage(AttributeTargets.All)]
+    public sealed class ProxyAttribute : Attribute
     {
         public bool DisableAutoProxy { get; set; }
         public bool EnableDebug { get; set; }
