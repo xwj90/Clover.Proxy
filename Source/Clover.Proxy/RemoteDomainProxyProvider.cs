@@ -16,13 +16,13 @@ namespace Clover.Proxy
     {
         private static ConcurrentDictionary<Type, Dictionary<AssemblyType, Assembly>> cachedAssemblies = new ConcurrentDictionary<Type, Dictionary<AssemblyType, Assembly>>();
         private ProxyConfiguration defaultConfiguration = null;
-        //  private Lazy<Dictionary<AssemblyType, Assembly>> lazy = new Lazy<Dictionary<AssemblyType, Assembly>>(InitAssembly);
 
         public RemoteDomainProxyProvider(ProxyConfiguration config)
             : base(config)
         {
             defaultConfiguration = config;
         }
+
         public override T CreateInstance<T>()
         {
             var configuratio = ProxyConfiguration.Create(typeof(T));
