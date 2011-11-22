@@ -16,18 +16,17 @@ namespace Clover.Proxy
     internal class DefaultProxyProvider : ProxyProviderBase
     {
         private readonly string DllCachePath = AppDomain.CurrentDomain.BaseDirectory;
-        private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
-        private readonly List<string> Namespaces = new List<string>();
-        private ProxyConfiguration config = null;
+        //private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
+        //private readonly List<string> Namespaces = new List<string>();
+        //private ProxyConfiguration config = null;
         private static ConcurrentDictionary<Type, Assembly> assemblies = new ConcurrentDictionary<Type, Assembly>();
 
-        public DefaultProxyProvider(ProxyConfiguration config)
+        public DefaultProxyProvider(ProxyConfiguration config) : base(config)
         {
-            this.config = config;
             this.DllCachePath = config.DllCachedPath;
 
-            base.BeforeCall = config.BeforeCall;
-            base.AfterCall = config.AfterCall;
+           // base.BeforeCall = config.BeforeCall;
+          //  base.AfterCall = config.AfterCall;
 
 
         }
@@ -44,26 +43,36 @@ namespace Clover.Proxy
             Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });
         }
-        private Type ignoreAttr = typeof(IgnoreProxyAttribute);
+
         private List<MethodInfo> FindAllMethods(Type type)
         {
+            if (config.DisableAutoProxy) return new List<MethodInfo>();
             var miList = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName);
             var resultList = new List<MethodInfo>();
             foreach (var mi in miList)
             {
-                var attrs = mi.GetCustomAttributes(ignoreAttr, true);
-                if (attrs.Length == 0) resultList.Add(mi);
+                bool status;
+                if (config.MemberAutoProxyStatus.TryGetValue(mi.Name, out status))
+                {
+                    if (status) resultList.Add(mi);
+                }
+                else { resultList.Add(mi); }
             }
             return resultList;
         }
         private List<PropertyInfo> FindAllProperties(Type type)
         {
+            if (config.DisableAutoProxy) return new List<PropertyInfo>();
             var piList = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.GetGetMethod().IsVirtual).ToList();
             var resultList = new List<PropertyInfo>();
             foreach (var pi in piList)
             {
-                var attrs = pi.GetCustomAttributes(ignoreAttr, true);
-                if (attrs.Length == 0) resultList.Add(pi);
+                bool status;
+                if (config.MemberAutoProxyStatus.TryGetValue(pi.Name, out status))
+                {
+                    if (status) resultList.Add(pi);
+                }
+                else { resultList.Add(pi); }
             }
             return resultList;
         }
@@ -132,7 +141,7 @@ namespace Clover.Proxy
             compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
             compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
             compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(proxyedType.Assembly.Location));
-            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
+            //compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
 
             foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
             {
@@ -160,14 +169,14 @@ namespace Clover.Proxy
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections"));
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
             codeNamespace.Imports.Add(new CodeNamespaceImport(typeof(BaseWrapper<>).Namespace));
-            foreach (Type item in InterfaceAssembly.GetTypes())
-            {
-                codeNamespace.Imports.Add(new CodeNamespaceImport(item.Namespace));
-            }
-            foreach (string @namespace in Namespaces)
-            {
-                codeNamespace.Imports.Add(new CodeNamespaceImport(@namespace));
-            }
+            //foreach (Type item in InterfaceAssembly.GetTypes())
+            //{
+            //    codeNamespace.Imports.Add(new CodeNamespaceImport(item.Namespace));
+            //}
+            //foreach (string @namespace in Namespaces)
+            //{
+            //    codeNamespace.Imports.Add(new CodeNamespaceImport(@namespace));
+            //}
             return codeNamespace;
         }
 

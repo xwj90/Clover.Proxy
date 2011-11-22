@@ -4,7 +4,7 @@ namespace Clover.Proxy
 {
     public class ProxyProviderBase
     {
-        private ProxyConfiguration config;
+        protected ProxyConfiguration config;
 
         public ProxyProviderBase(ProxyConfiguration config)
         {
