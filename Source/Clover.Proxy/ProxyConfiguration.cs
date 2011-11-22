@@ -20,8 +20,7 @@ namespace Clover.Proxy
         public Dictionary<string, bool> MemberAutoProxyStatus = new Dictionary<string, bool>();
 
         private static ConcurrentDictionary<Type, ProxyConfiguration> configurations = new ConcurrentDictionary<Type, ProxyConfiguration>();
-
-
+        
         public ProxyConfiguration()
             : this(null)
         {
