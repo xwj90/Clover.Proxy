@@ -21,38 +21,39 @@ namespace Clover.Proxy
         //private ProxyConfiguration config = null;
         private static ConcurrentDictionary<Type, Assembly> assemblies = new ConcurrentDictionary<Type, Assembly>();
 
-        public DefaultProxyProvider(ProxyConfiguration config) : base(config)
+        public DefaultProxyProvider(ProxyConfiguration config)
+            : base(config)
         {
             this.DLLCachedPath = config.DllCachedPath;
 
-           // base.BeforeCall = config.BeforeCall;
-          //  base.AfterCall = config.AfterCall;
+            // base.BeforeCall = config.BeforeCall;
+            //  base.AfterCall = config.AfterCall;
 
 
         }
 
         public override T CreateInstance<T>()
         {
-            var configuratio = ProxyConfiguration.Create(typeof(T));
-            if (configuratio.DisableAutoProxy)
+            //var configuratio = ProxyConfiguration.Create(typeof(T));
+            if (proxyConfig.DisableAutoProxy)
             {
                 return (T)Activator.CreateInstance(typeof(T));
             }
             var type = typeof(T);
-            var assembly = assemblies.GetOrAdd(type, (t) => { return CreateLocalAssembly<T>(typeof(T).Assembly); });
-            Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(typeof(T)));
+            var assembly = assemblies.GetOrAdd(type, (t) => { return CreateLocalAssembly<T>(type.Assembly); });
+            Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(type));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });
         }
 
         private List<MethodInfo> FindAllMethods(Type type)
         {
-            if (config.DisableAutoProxy) return new List<MethodInfo>();
+            if (proxyConfig.DisableAutoProxy) return new List<MethodInfo>();
             var miList = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName);
             var resultList = new List<MethodInfo>();
             foreach (var mi in miList)
             {
                 bool status;
-                if (config.MemberAutoProxyStatus.TryGetValue(mi.Name, out status))
+                if (proxyConfig.MemberAutoProxyStatus.TryGetValue(mi.Name, out status))
                 {
                     if (status) resultList.Add(mi);
                 }
@@ -62,13 +63,13 @@ namespace Clover.Proxy
         }
         private List<PropertyInfo> FindAllProperties(Type type)
         {
-            if (config.DisableAutoProxy) return new List<PropertyInfo>();
+            if (proxyConfig.DisableAutoProxy) return new List<PropertyInfo>();
             var piList = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.GetGetMethod().IsVirtual).ToList();
             var resultList = new List<PropertyInfo>();
             foreach (var pi in piList)
             {
                 bool status;
-                if (config.MemberAutoProxyStatus.TryGetValue(pi.Name, out status))
+                if (proxyConfig.MemberAutoProxyStatus.TryGetValue(pi.Name, out status))
                 {
                     if (status) resultList.Add(pi);
                 }

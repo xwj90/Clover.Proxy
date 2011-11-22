@@ -4,11 +4,11 @@ namespace Clover.Proxy
 {
     public class ProxyProviderBase
     {
-        protected ProxyConfiguration config;
+        protected ProxyConfiguration proxyConfig;
 
         public ProxyProviderBase(ProxyConfiguration config)
         {
-            this.config = config;
+            this.proxyConfig = config;
             //todo:ProxyConfiguration修改
             this.BeforeCall = config.BeforeCall;
             this.AfterCall = config.AfterCall;
