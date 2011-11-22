@@ -4,7 +4,7 @@ namespace Clover.Proxy
 {
     public class ProxyProviderBase
     {
-        protected ProxyConfiguration proxyConfig { get; set; }
+        protected ProxyConfiguration ProxyConfig { get; set; }
         public Action<Invocation> BeforeCall { get; set; }
         public Action<Invocation> AfterCall { get; set; }
 
@@ -12,7 +12,7 @@ namespace Clover.Proxy
 
         public ProxyProviderBase(ProxyConfiguration config)
         {
-            this.proxyConfig = config;
+            this.ProxyConfig = config;
             if (config != null)
             {
                 this.BeforeCall = config.BeforeCall;
