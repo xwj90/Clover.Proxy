@@ -735,7 +735,7 @@ this.{0}= {1}; ", item.Name,
         }
 
 
-        internal static Assembly CreateLocalClassAssembly(Type type, ProxyConfiguration config, Assembly entityAssembly)
+        internal static Assembly CreateLocalClassAssembly(Type type, ProxyConfiguration config)
         {
             string localClassName = TypeInformation.GetLocalProxyClassName(type);
 

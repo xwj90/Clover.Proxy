@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Clover.Proxy
 {
-    class UniqueNameHelper
+    sealed class UniqueNameHelper
     {
         private HashSet<string> nameSet = new HashSet<string>();
         private int counter;
