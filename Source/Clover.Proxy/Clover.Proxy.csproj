@@ -31,6 +31,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>Clover.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -53,6 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyGenerator.cs" />
+    <Compile Include="OldDesign\AssemblyHelper.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ProxyException.cs" />
     <Compile Include="RemoteRunner.cs" />
     <Compile Include="IgnoreProxyAttribute.cs" />
@@ -62,7 +71,6 @@
     <Compile Include="RemoteDomainProxyProvider.cs" />
     <Compile Include="DeafultProxyProvider.cs" />
     <Compile Include="ProxyProviderBase.cs" />
-    <Compile Include="OldDesign\AssemblyHelper.cs" />
     <Compile Include="OldDesign\BaseWrapper.cs" />
     <Compile Include="OldDesign\BinaryExtensions.cs" />
     <Compile Include="OldDesign\ConfigurationFileHelper.cs" />
@@ -82,6 +90,9 @@
     <Compile Include="OldDesign\SituationHelper.cs" />
     <Compile Include="OldDesign\TypeInformation.cs" />
     <Compile Include="UniqueNameHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Clover.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
