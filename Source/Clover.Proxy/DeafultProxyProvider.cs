@@ -15,7 +15,7 @@ namespace Clover.Proxy
 {
     internal class DefaultProxyProvider : ProxyProviderBase
     {
-        private readonly string DllCachePath = AppDomain.CurrentDomain.BaseDirectory;
+        private readonly string DLLCachedPath = AppDomain.CurrentDomain.BaseDirectory;
         //private readonly Assembly InterfaceAssembly = typeof(DefaultProxyProvider).Assembly;
         //private readonly List<string> Namespaces = new List<string>();
         //private ProxyConfiguration config = null;
@@ -23,7 +23,7 @@ namespace Clover.Proxy
 
         public DefaultProxyProvider(ProxyConfiguration config) : base(config)
         {
-            this.DllCachePath = config.DllCachedPath;
+            this.DLLCachedPath = config.DllCachedPath;
 
            // base.BeforeCall = config.BeforeCall;
           //  base.AfterCall = config.AfterCall;
@@ -115,7 +115,7 @@ namespace Clover.Proxy
 
             var compilerParameters = CreateCompilerParameters(proxyedType);
 
-            string filePath = DllCachePath + @"Class\" + proxyedType.Namespace + "." + proxyedType.Name + ".Local.cs";
+            string filePath = DLLCachedPath + @"Class\" + proxyedType.Namespace + "." + proxyedType.Name + ".Local.cs";
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.WriteAllText(filePath, fileContent.ToString());
@@ -139,18 +139,18 @@ namespace Clover.Proxy
             var compilerParameters = new CompilerParameters();
             compilerParameters.ReferencedAssemblies.Add("System.dll");
             compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
-            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
-            compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(proxyedType.Assembly.Location));
+            compilerParameters.ReferencedAssemblies.Add(DLLCachedPath + Path.GetFileName(typeof(ServiceContext).Assembly.Location));
+            compilerParameters.ReferencedAssemblies.Add(DLLCachedPath + Path.GetFileName(proxyedType.Assembly.Location));
             //compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
 
-            foreach (string file in Directory.GetFiles(DllCachePath, "*.dll"))
+            foreach (string file in Directory.GetFiles(DLLCachedPath, "*.dll"))
             {
                 if (file.ToUpper().StartsWith("Clover."))
                     continue;
                 compilerParameters.ReferencedAssemblies.Add(file);
             }
 
-            compilerParameters.OutputAssembly = DllCachePath + proxyedType.FullName + ".Local.dll";
+            compilerParameters.OutputAssembly = DLLCachedPath + proxyedType.FullName + ".Local.dll";
             compilerParameters.GenerateInMemory = false;
             compilerParameters.IncludeDebugInformation = true;
             compilerParameters.GenerateExecutable = false; //生成EXE,不是DLL 
