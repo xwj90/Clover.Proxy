@@ -36,7 +36,6 @@ namespace Clover.Proxy
                 {
                     try
                     {
-                        string name = Domain.FriendlyName;
                         _remoteT = (T)Domain.CreateInstanceAndUnwrap(RemoteAssembly.FullName, TypeInformation.GetRemoteProxyClassFullName(typeof(T)));
                     }
                     catch
@@ -105,9 +104,8 @@ namespace Clover.Proxy
             appdomainSetup.ApplicationBase = AssemblyHelper<T>.DllCachePath;
             Evidence evidence = AppDomain.CurrentDomain.Evidence;
 
-            AppDomain a = AppDomain.CreateDomain("Domain Application " + type.Name, evidence, appdomainSetup);
-            string name = a.FriendlyName;
-            return a;
+            AppDomain domain = AppDomain.CreateDomain("Domain Application " + type.Name, evidence, appdomainSetup);
+            return domain;
         }
     }
 }
