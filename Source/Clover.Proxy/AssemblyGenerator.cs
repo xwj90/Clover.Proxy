@@ -165,7 +165,7 @@ namespace Clover.Proxy
                     cs.Method = new CodeMethodReferenceExpression { MethodName = "RemoteRunner<" + type.Name + ">.RemoteT." + item.Name };
                     foreach (ParameterInfo input in item.GetParameters())
                     {
-                        Type t = input.ParameterType;
+                        //Type t = input.ParameterType;
                         //Situation situation = SituationHelper.GetSituation(t);
                         cs.Parameters.Add(new CodeSnippetExpression(input.Name));
                         // cs.Parameters.Add(new CodeSnippetExpression(SituationHelper.GetExpression(t, input.Name)));
