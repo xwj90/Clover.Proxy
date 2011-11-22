@@ -2,6 +2,7 @@
 {
     public enum Situation
     {
+        Unknown = 0,
         UnSerializable = 2,
         Array = 4,
         IEnumableT = 8,
