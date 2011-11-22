@@ -1,47 +1,48 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Clover.Proxy
 {
-    public class TypeInformation
+    static class TypeInformation
     {
-        public static string GetEntityProxyClassName(Type t)
+        public static string GetEntityProxyClassName(MemberInfo memberInfo)
         {
-            return "Serializable_" + t.Name;
+            return "Serializable_" + memberInfo.Name;
         }
 
-        public static string GetLocalProxyClassName(Type t)
+        public static string GetLocalProxyClassName(MemberInfo memberInfo)
         {
-            return "Internal_Local_" + t.Name;
+            return "Internal_Local_" + memberInfo.Name;
         }
 
-        public static string GetRemoteProxyClassName(Type t)
+        public static string GetRemoteProxyClassName(MemberInfo memberInfo)
         {
-            return "Internal_Remote_" + t.Name;
+            return "Internal_Remote_" + memberInfo.Name;
         }
 
-        public static string GetEntityNamespace(Type t)
+        public static string GetEntityNamespace(Type type)
         {
-            return string.IsNullOrEmpty(t.Namespace) ? "" : t.Namespace + ".Entity";
+            return string.IsNullOrEmpty(type.Namespace) ? "" : type.Namespace + ".Entity";
         }
 
-        public static string GetLocalNamespace(Type t)
+        public static string GetLocalNamespace(Type type)
         {
-            return string.IsNullOrEmpty(t.Namespace) ? "" : t.Namespace + ".Local";
+            return string.IsNullOrEmpty(type.Namespace) ? "" : type.Namespace + ".Local";
         }
 
-        public static string GetRemoteNamespace(Type t)
+        public static string GetRemoteNamespace(Type type)
         {
-            return string.IsNullOrEmpty(t.Namespace) ? "" : t.Namespace + ".Remote";
+            return string.IsNullOrEmpty(type.Namespace) ? "" : type.Namespace + ".Remote";
         }
 
-        public static string GetLocalProxyClassFullName(Type t)
+        public static string GetLocalProxyClassFullName(Type type)
         {
-            return GetLocalNamespace(t) + "." + GetLocalProxyClassName(t);
+            return GetLocalNamespace(type) + "." + GetLocalProxyClassName(type);
         }
 
-        public static string GetRemoteProxyClassFullName(Type t)
+        public static string GetRemoteProxyClassFullName(Type type)
         {
-            return GetRemoteNamespace(t) + "." + GetRemoteProxyClassName(t);
+            return GetRemoteNamespace(type) + "." + GetRemoteProxyClassName(type);
         }
     }
 }
