@@ -204,30 +204,7 @@ namespace Clover.Proxy
             }
         }
 
-        class UniqueNameHelper
-        {
-            private HashSet<string> nameSet = new HashSet<string>();
-
-            public string ToUniqueName(string oriname)
-            {
-                int counter = 0;
-                var temp = oriname;
-                while (true)
-                {
-                    if (!nameSet.Contains(temp))
-                    {
-                        nameSet.Add(temp);
-                        return temp;
-                    }
-                    counter++;
-                    temp += counter;
-                }
-            }
-            public void Add(string name)
-            {
-                nameSet.Add(name);
-            }
-        }
+       
 
         private void OverrideMethods(Type currentType, CodeTypeDeclaration wrapProxyClass)
         {

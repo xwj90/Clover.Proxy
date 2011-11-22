@@ -81,6 +81,7 @@
     <Compile Include="OldDesign\Situation.cs" />
     <Compile Include="OldDesign\SituationHelper.cs" />
     <Compile Include="OldDesign\TypeInformation.cs" />
+    <Compile Include="UniqueNameHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
