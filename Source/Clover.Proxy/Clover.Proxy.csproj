@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="AssemblyGenerator.cs" />
     <Compile Include="ConfigurationFileHelper.cs" />
+    <Compile Include="ProxyConfigSection.cs" />
     <Compile Include="Situation.cs" />
     <Compile Include="SituationHelper.cs" />
     <Compile Include="TypeInformation.cs" />
