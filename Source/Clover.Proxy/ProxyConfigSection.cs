@@ -24,11 +24,17 @@ namespace Clover.Proxy
         public object Create(object parent, object configContext, XmlNode section)
         {
             Dictionary<string, string> dic = new Dictionary<string, string>();
-            foreach (XmlNode xnl in section.ChildNodes)
+            if (section!=null)
             {
-                if (XmlNodeType.Element == xnl.NodeType)
+                if (section.HasChildNodes)
                 {
-                    dic.Add(xnl.Attributes["key"].Value, xnl.Attributes["value"].Value);
+                    foreach (XmlNode xnl in section.ChildNodes)
+                    {
+                        if (XmlNodeType.Element == xnl.NodeType)
+                        {
+                            dic.Add(xnl.Attributes["key"].Value, xnl.Attributes["value"].Value);
+                        }
+                    }
                 }
             }
             return dic;
