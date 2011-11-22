@@ -1,4 +1,4 @@
-﻿namespace Clover.Proxy
+namespace Clover.Proxy
 {
     public enum Situation
     {
