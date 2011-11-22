@@ -64,7 +64,6 @@
     </Compile>
     <Compile Include="ProxyException.cs" />
     <Compile Include="RemoteRunner.cs" />
-    <Compile Include="IgnoreProxyAttribute.cs" />
     <Compile Include="Invocation.cs" />
     <Compile Include="ProxyConfiguration.cs" />
     <Compile Include="ProxyProviderFactory.cs" />
