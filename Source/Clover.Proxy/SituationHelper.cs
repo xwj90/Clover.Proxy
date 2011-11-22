@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +9,11 @@ namespace Clover.Proxy
     {
         public static Type[] GetInternalTypeFormArray(Type type)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             if (type.IsGenericType)
             {
                 return type.GetGenericArguments();
@@ -22,6 +27,11 @@ namespace Clover.Proxy
 
         public static string GetExpression(Type type, string key)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             Situation situation = GetSituation(type);
             string expression = "";
             switch (situation)
@@ -74,6 +84,11 @@ namespace Clover.Proxy
 
         public static Situation GetSituation(Type type)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             if (type.IsEnum)
             {
                 return Situation.SerializableEnum;
@@ -166,6 +181,11 @@ namespace Clover.Proxy
 
         public static IEnumerable<MemberInfo> GetMembers(Type type)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             var list = new List<MemberInfo>();
 
             foreach (FieldInfo item in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
@@ -182,6 +202,11 @@ namespace Clover.Proxy
 
         public static Type GetRealType(MemberInfo member)
         {
+            if (member == null)
+            {
+                throw new ArgumentNullException("member");
+            }
+
             var fieldInfo = member as FieldInfo;
             if (fieldInfo != null)
             {
@@ -199,6 +224,11 @@ namespace Clover.Proxy
 
         public static Type[] GetToBeSerializableTypes(Type type)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             switch (GetSituation(type))
             {
                 case Situation.Array:
@@ -240,6 +270,11 @@ namespace Clover.Proxy
 
         public static string GetMethodName(Type type, bool includePrefix)
         {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
             string typeName = null;
             if (type == typeof(string))
                 typeName = "String";

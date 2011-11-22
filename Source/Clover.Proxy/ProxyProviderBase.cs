@@ -22,7 +22,7 @@ namespace Clover.Proxy
 
         public virtual T CreateInstance<T>()
         {
-            throw new NotImplementedException("you have to override CreateInstance<T> method!");
+            throw new NotImplementedException("you have to override CreateInstance of T method!");
         }
 
         public void ExecuteBeforeCall(Invocation invocation)

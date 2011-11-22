@@ -89,7 +89,7 @@ namespace Clover.Proxy
             }
             if (cr.Errors.Count > 0)
             {
-                throw new ProxyException("complie eneity proxy class error:" + Environment.NewLine + outputMessage);
+                throw new ProxyException("Compile entity proxy class error:" + Environment.NewLine + outputMessage);
             }
             //AppDomain.CurrentDomain.Load(cr.CompiledAssembly);
             return cr.CompiledAssembly;
@@ -226,7 +226,7 @@ namespace Clover.Proxy
             }
             if (cr.Errors.Count > 0)
             {
-                throw new ProxyException("complie local proxy class error:" + Environment.NewLine + outputMessage);
+                throw new ProxyException("Compile local proxy class error:" + Environment.NewLine + outputMessage);
             }
             return cr.CompiledAssembly;
         }
@@ -439,7 +439,7 @@ WindowsIdentity_1024.Impersonate();
 
             if (cr.Errors.Count > 0)
             {
-                throw new ProxyException("complie remote proxy class error:" + Environment.NewLine + outputMessage);
+                throw new ProxyException("compile remote proxy class error:" + Environment.NewLine + outputMessage);
             }
             return cr.CompiledAssembly;
         }
@@ -786,7 +786,7 @@ this.{0}= {1}; ", item.Name,
             }
             if (cr.Errors.Count > 0)
             {
-                throw new ProxyException("complie local proxy class error:" + Environment.NewLine + outputMessage);
+                throw new ProxyException("compile local proxy class error:" + Environment.NewLine + outputMessage);
             }
             return cr.CompiledAssembly;
         }
