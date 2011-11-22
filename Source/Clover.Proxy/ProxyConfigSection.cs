@@ -9,14 +9,14 @@ using System.Runtime.InteropServices;
 namespace Clover.Proxy
 {
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false)]  
-    [ComVisible(true)]
+    [ComVisible(false)]
     public sealed class AssemblyProxyAttribute : Attribute
     {
         public AssemblyProxyAttribute(string proxy)
         {
             Proxy = proxy;
         }
-        public string Proxy { get; set; }
+        public string Proxy { get; private set; }
     }
 
     public class ProxyConfigSection : IConfigurationSectionHandler
@@ -46,14 +46,22 @@ namespace Clover.Proxy
             if (ConfigurationManager.GetSection("Clover.Proxy") != null)
             {
                 Dictionary<string, string> dic = (Dictionary<string, string>)ConfigurationManager.GetSection("Clover.Proxy");
-                DisableAutoProxy = Convert.ToBoolean(dic["DisableAutoProxy"]);
-                EnableDebug = Convert.ToBoolean(dic["EnableDebug"]);
-                EnableCrossDomain = Convert.ToBoolean(dic["EnableCrossDomain"]);
+                ProxyFormatProvider boolFormat = new ProxyFormatProvider();
+                DisableAutoProxy = Convert.ToBoolean(dic["DisableAutoProxy"], boolFormat);
+                EnableDebug = Convert.ToBoolean(dic["EnableDebug"], boolFormat);
+                EnableCrossDomain = Convert.ToBoolean(dic["EnableCrossDomain"], boolFormat);
                 DllCachedPath = dic["DllCachedPath"];
                 EnumPType = (ProxyType)Enum.Parse(typeof(ProxyType), dic["ProxyType"], true);
                 IsConfiged = true;
             }
         }
+    }
 
+    public class ProxyFormatProvider : IFormatProvider
+    {
+        public object GetFormat(Type formatType)
+        {
+            return false;
+        }
     }
 }
