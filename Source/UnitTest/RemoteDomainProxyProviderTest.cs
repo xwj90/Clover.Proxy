@@ -77,13 +77,15 @@ namespace UnitTest
             var wrapper = service.Create<TestWrapper>();
             wrapper.Test();
         }
-
-        internal class TestWrapper
+        
+    }
+    [Proxy(ProxyType = ProxyType.Remote)]
+    [Serializable]
+    public class TestWrapper
+    {
+        public virtual void Test()
         {
-            public void Test()
-            {
-                Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
-            }
+            Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
         }
     }
 }
