@@ -19,7 +19,7 @@ namespace Clover.Proxy
         public ProxyType ProxyType { get; set; }
         public Dictionary<string, bool> MemberAutoProxyStatus { get; private set; }
 
-        private static ConcurrentDictionary<Type, ProxyConfiguration>  configurations = new ConcurrentDictionary<Type, ProxyConfiguration>();
+        private static ConcurrentDictionary<Type, ProxyConfiguration> configurations = new ConcurrentDictionary<Type, ProxyConfiguration>();
 
         public ProxyConfiguration()
             : this(null)
@@ -33,7 +33,8 @@ namespace Clover.Proxy
                 this.DisableAutoProxy = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.Proxy.DisableAutoProxy"]);
                 this.EnableDebug = Convert.ToBoolean(ConfigurationManager.AppSettings["Clover.Proxy.EnableDebug"]);
                 this.DllCachedPath = Convert.ToString(ConfigurationManager.AppSettings["Clover.Proxy.DllCachedPath"]);
-                this.ProxyType = (ProxyType)Enum.Parse(typeof(ProxyType), Convert.ToString(ConfigurationManager.AppSettings["Clover.Proxy.ProxyType"]));
+                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["Clover.Proxy.ProxyType"]))
+                    this.ProxyType = (ProxyType)Enum.Parse(typeof(ProxyType), Convert.ToString(ConfigurationManager.AppSettings["Clover.Proxy.ProxyType"]));
             }
             else
             {
