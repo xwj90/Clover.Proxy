@@ -742,7 +742,11 @@ this.{0}= {1}; ", item.Name,
             return new CodeTypeReference(t);
         }
 
-
+        private static bool HasMarkSerializable(Type type)
+        {
+            var attrs = type.GetCustomAttributes(typeof(SerializableAttribute), false);
+            return attrs != null && attrs.Length > 0;
+        }
         internal static Assembly CreateLocalClassAssembly(Type type, ProxyConfiguration config)
         {
             string localClassName = TypeInformation.GetLocalProxyClassName(type);
@@ -752,20 +756,23 @@ this.{0}= {1}; ", item.Name,
 
             var wrapProxyClass = new CodeTypeDeclaration(localClassName);
             wrapProxyClass.BaseTypes.Add(type);
-            //todo:must be Serializable?
-            wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
+
+            if (HasMarkSerializable(type))
+                wrapProxyClass.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable"));
             codeNamespace.Types.Add(wrapProxyClass);
 
             var providerBaseField = new CodeMemberField(typeof(ProxyProviderBase), "_proxyProviderBase");
             wrapProxyClass.Members.Add(providerBaseField);
             var baseTypeField = new CodeMemberField(typeof(Type), "_proxyBaseType");
             wrapProxyClass.Members.Add(baseTypeField);
+            wrapProxyClass.Members.Add(new CodeMemberField(typeof(bool), "_hasInit"));
 
             var constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(ProxyProviderBase), "_proxyProviderBase"));
             constructor.Statements.Add(new CodeAssignStatement(new CodeVariableReferenceExpression("this._proxyProviderBase"), new CodeVariableReferenceExpression("_proxyProviderBase")));
             constructor.Statements.Add(new CodeVariableReferenceExpression("this._proxyBaseType = this.GetType().BaseType;"));
+            constructor.Statements.Add(new CodeVariableReferenceExpression("this._hasInit = true;"));
             wrapProxyClass.Members.Add(constructor);
 
             OverrideMethods(type, wrapProxyClass, config);
@@ -806,14 +813,6 @@ this.{0}= {1}; ", item.Name,
             compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
             compilerParameters.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(typeof(RemoteRunner<>).Assembly.Location));
             compilerParameters.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(proxyedType.Assembly.Location));
-            //compilerParameters.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
-
-            //foreach (string file in Directory.GetFiles(DLLCachedPath, "*.dll"))
-            //{
-            //    if (file.ToUpper().StartsWith("Clover."))
-            //        continue;
-            //    compilerParameters.ReferencedAssemblies.Add(file);
-            //}
 
             compilerParameters.OutputAssembly = config.DllCachedPath + proxyedType.FullName + ".Local.dll";
             compilerParameters.GenerateInMemory = false;
@@ -834,14 +833,6 @@ this.{0}= {1}; ", item.Name,
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections"));
             codeNamespace.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
             codeNamespace.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
-            //foreach (Type item in InterfaceAssembly.GetTypes())
-            //{
-            //    codeNamespace.Imports.Add(new CodeNamespaceImport(item.Namespace));
-            //}
-            //foreach (string @namespace in Namespaces)
-            //{
-            //    codeNamespace.Imports.Add(new CodeNamespaceImport(@namespace));
-            //}
             return codeNamespace;
         }
 
@@ -856,7 +847,11 @@ this.{0}= {1}; ", item.Name,
                 propertyCode.Type = GetSimpleType(pInfo.PropertyType);
                 propertyCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
 
+                CodeConditionStatement conditionalStatement = new CodeConditionStatement(
+                    new CodeVariableReferenceExpression("!_hasInit"), new CodeSnippetStatement(string.Format("base.{0} = value;return;", pInfo.Name)));
+                //propertyCode.GetStatements.Add(
                 propertyCode.GetStatements.Add(getinvocationCode);
+                propertyCode.SetStatements.Add(conditionalStatement);
                 propertyCode.SetStatements.Add(setinvocationCode);
 
                 propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
@@ -880,7 +875,7 @@ this.{0}= {1}; ", item.Name,
         private static List<MethodInfo> FindAllMethods(Type type, ProxyConfiguration config)
         {
             if (config.DisableAutoProxy) return new List<MethodInfo>();
-            var methodInfoList = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName);
+            var methodInfoList = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(p => p.IsVirtual && !p.IsSpecialName);
             var resultList = new List<MethodInfo>();
             foreach (var methodInfo in methodInfoList)
             {
@@ -903,7 +898,10 @@ this.{0}= {1}; ", item.Name,
                 bool status;
                 if (config.MemberAutoProxyStatus.TryGetValue(propertyInfo.Name, out status))
                 {
-                    if (status) resultList.Add(propertyInfo);
+                    if (status)
+                    {
+                        resultList.Add(propertyInfo);
+                    }
                 }
                 else { resultList.Add(propertyInfo); }
             }
@@ -927,6 +925,10 @@ this.{0}= {1}; ", item.Name,
                     methodCode.Parameters.Add(new CodeParameterDeclarationExpression(input.ParameterType, input.Name));
                     nameHelper.Add(input.Name);
                 }
+
+                CodeConditionStatement conditionalStatement = new CodeConditionStatement(
+                    new CodeVariableReferenceExpression("!_hasInit"), new CodeSnippetStatement(string.Format("throw new ProxyException(\"You should not call a virtual method {0} in constructor.\");", methodInfo.Name)));
+                methodCode.Statements.Add(conditionalStatement);
 
                 CodeVariableDeclarationStatement v_arguments_Code = new CodeVariableDeclarationStatement("System.Object[]", nameHelper.ToUniqueName("arguments"), new CodeArrayCreateExpression("System.Object", parameterList.Length));
                 methodCode.Statements.Add(v_arguments_Code);
@@ -964,7 +966,10 @@ this.{0}= {1}; ", item.Name,
                 invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
                 methodCode.Statements.Add(invokeMethodCode);
 
-                methodCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
+                methodCode.Attributes = MemberAttributes.Override;
+                if ((methodInfo.Attributes & MethodAttributes.Public) == MethodAttributes.Public) methodCode.Attributes |= MemberAttributes.Public;
+                else if ((methodInfo.Attributes & MethodAttributes.Family) == MethodAttributes.Family) methodCode.Attributes |= MemberAttributes.Family;
+                else if ((methodInfo.Attributes & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem) methodCode.Attributes |= MemberAttributes.FamilyAndAssembly;
                 var temp_returnData = nameHelper.ToUniqueName("temp_returnData");
                 if (methodInfo.ReturnType != typeof(void))
                 {
