@@ -1,4 +1,4 @@
-using Clover.Proxy;
+﻿using Clover.Proxy;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Reflection;
@@ -87,6 +87,7 @@ namespace UnitTest
 
     }
     [Serializable]
+    [Proxy(ProxyType = ProxyType.Remote)]
     public class TestWrapper
     {
         public void Test()
@@ -94,7 +95,7 @@ namespace UnitTest
             Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
         }
     }
-
+    [Proxy(ProxyType = ProxyType.Remote)]
     public class TestWrapper2 : MarshalByRefObject
     {
         public void Test()
