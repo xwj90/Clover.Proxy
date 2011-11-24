@@ -1,4 +1,4 @@
-﻿using Clover.Proxy;
+using Clover.Proxy;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Reflection;
@@ -66,24 +66,38 @@ namespace UnitTest
         #endregion
 
 
-        /// <summary>
-        ///A test for RemoteDomainProxyProvider Constructor
-        ///</summary>
+
         [TestMethod()]
-        public void CrossDomainSampleTest1()
+        public void CrossDomainSampleTestWithSerializableClass()
         {
 
             ProxyService service = new ProxyService();
             var wrapper = service.Create<TestWrapper>();
             wrapper.Test();
         }
-        
+
+        public void CrossDomainSampleTestWithMarshalByRefObject()
+        {
+
+            ProxyService service = new ProxyService();
+            var wrapper = service.Create<TestWrapper2>();
+            wrapper.Test();
+        }
+
+
     }
-    [Proxy(ProxyType = ProxyType.Remote)]
     [Serializable]
     public class TestWrapper
     {
-        public virtual void Test()
+        public void Test()
+        {
+            Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
+        }
+    }
+
+    public class TestWrapper2 : MarshalByRefObject
+    {
+        public void Test()
         {
             Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
         }

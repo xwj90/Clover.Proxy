@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Clover.Proxy;
@@ -10,8 +10,8 @@ namespace Sample
         private static void Main(string[] args)
         {
            
-            //new design
-            //simple
+            ////new design
+            ////simple
             //var service = new ProxyService();
             //service.BeforeCall += (p) =>
             //{
@@ -41,14 +41,14 @@ namespace Sample
             ////int v = 0;
 
             //item.Test("111111");
-            //   {
-            //       var key = 1;
-            //       var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
-            //           {
-            //               return Interlocked.Increment(ref v);
-            //           });
-            //       Console.WriteLine(returnValue);
-            //   });
+            ////   {
+            ////       var key = 1;
+            ////       var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
+            ////           {
+            ////               return Interlocked.Increment(ref v);
+            ////           });
+            ////       Console.WriteLine(returnValue);
+            ////   });
 
         }
     }
