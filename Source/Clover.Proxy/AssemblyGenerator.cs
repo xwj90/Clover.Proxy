@@ -901,9 +901,9 @@ this.{0}= {1}; ", item.Name,
         }
 
 
-        private static void OverrideMethods(Type currentType, CodeTypeDeclaration wrapProxyClass, ProxyConfiguration config)
+        private static void OverrideMethods(Type classToProxy, CodeTypeDeclaration proxyClassCode, ProxyConfiguration config)
         {
-            foreach (MethodInfo methodInfo in FindAllMethods(currentType, config))
+            foreach (MethodInfo methodInfo in FindAllMethods(classToProxy, config))
             {
                 UniqueNameHelper nameHelper = new UniqueNameHelper();
                 var methodCode = new CodeMemberMethod();
@@ -990,7 +990,7 @@ this.{0}= {1}; ", item.Name,
                     methodCode.Statements.Add(new CodeMethodReturnStatement(castExpression));
                 }
 
-                wrapProxyClass.Members.Add(methodCode);
+                proxyClassCode.Members.Add(methodCode);
             }
         }
     }
