@@ -832,28 +832,28 @@ this.{0}= {1}; ", item.Name,
         {
             foreach (PropertyInfo pInfo in FindAllProperties(currentType, config))
             {
-                var getinvocationCode = new CodeSnippetStatement(string.Format("Invocation getinvocation = new Invocation(new object[0], _proxyBaseType.GetProperty(\"{0}\").GetGetMethod(), this);", pInfo.Name));
-                var setinvocationCode = new CodeSnippetStatement(string.Format("Invocation setinvocation = new Invocation(new object[]{{value}}, _proxyBaseType.GetProperty(\"{0}\").GetSetMethod(), this);", pInfo.Name));
+                var getinvocationCode = new CodeSnippetStatement(string.Format("Invocation getinvocation = new Invocation(new object[0], this._proxyBaseType.GetProperty(\"{0}\").GetGetMethod(), this);", pInfo.Name));
+                var setinvocationCode = new CodeSnippetStatement(string.Format("Invocation setinvocation = new Invocation(new object[]{{value}}, this._proxyBaseType.GetProperty(\"{0}\").GetSetMethod(), this);", pInfo.Name));
                 var propertyCode = new CodeMemberProperty();
                 propertyCode.Name = pInfo.Name;
                 propertyCode.Type = GetSimpleType(pInfo.PropertyType);
                 propertyCode.Attributes = MemberAttributes.Override | MemberAttributes.Public;
 
                 CodeConditionStatement conditionalStatement = new CodeConditionStatement(
-                    new CodeVariableReferenceExpression("!_hasInit"), new CodeSnippetStatement(string.Format("base.{0} = value;return;", pInfo.Name)));
+                    new CodeVariableReferenceExpression("!this._hasInit"), new CodeSnippetStatement(string.Format("base.{0} = value;return;", pInfo.Name)));
                 //propertyCode.GetStatements.Add(
                 propertyCode.GetStatements.Add(getinvocationCode);
                 propertyCode.SetStatements.Add(conditionalStatement);
                 propertyCode.SetStatements.Add(setinvocationCode);
 
-                propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
-                propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("this._proxyProviderBase.ExecuteBeforeCall(getinvocation);"));
+                propertyCode.SetStatements.Add(new CodeSnippetStatement("this._proxyProviderBase.ExecuteBeforeCall(setinvocation);"));
 
                 propertyCode.GetStatements.Add(new CodeSnippetStatement(string.Format("var temp_returnData_1024 = base.{0};\r\ngetinvocation.ReturnValue = temp_returnData_1024;", pInfo.Name)));
                 propertyCode.SetStatements.Add(new CodeSnippetStatement(string.Format("base.{0} = value;", pInfo.Name)));
 
-                propertyCode.GetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteAfterCall(getinvocation);"));
-                propertyCode.SetStatements.Add(new CodeSnippetStatement("_proxyProviderBase.ExecuteAfterCall(setinvocation);"));
+                propertyCode.GetStatements.Add(new CodeSnippetStatement("this._proxyProviderBase.ExecuteAfterCall(getinvocation);"));
+                propertyCode.SetStatements.Add(new CodeSnippetStatement("this._proxyProviderBase.ExecuteAfterCall(setinvocation);"));
 
                 propertyCode.GetStatements.Add(new CodeSnippetStatement("var result = "));
                 CodeCastExpression castExpression = new CodeCastExpression(pInfo.PropertyType, new CodeVariableReferenceExpression("getinvocation.ReturnValue"));
@@ -919,7 +919,7 @@ this.{0}= {1}; ", item.Name,
                 }
 
                 CodeConditionStatement conditionalStatement = new CodeConditionStatement(
-                    new CodeVariableReferenceExpression("!_hasInit"), new CodeSnippetStatement(string.Format("throw new ProxyException(\"You should not call a virtual method {0} in constructor.\");", methodInfo.Name)));
+                    new CodeVariableReferenceExpression("!this._hasInit"), new CodeSnippetStatement(string.Format("throw new ProxyException(\"You should not call a virtual method {0} in constructor.\");", methodInfo.Name)));
                 methodCode.Statements.Add(conditionalStatement);
 
                 CodeVariableDeclarationStatement v_arguments_Code = new CodeVariableDeclarationStatement("System.Object[]", nameHelper.ToUniqueName("arguments"), new CodeArrayCreateExpression("System.Object", parameterList.Length));
@@ -936,7 +936,7 @@ this.{0}= {1}; ", item.Name,
                 CodeSnippetStatement invocationCode = null;
                 if (parameterList.Length == 0)
                 {
-                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name));
+                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, this._proxyBaseType.GetMethod(\"{0}\"), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name));
                 }
                 else
                 {
@@ -947,14 +947,14 @@ this.{0}= {1}; ", item.Name,
                         CodeAssignStatement assignCode = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{1}[{0}]", i, typeArrayName)), new CodeSnippetExpression(string.Format("typeof({0})", parameterList[i].ParameterType)));
                         methodCode.Statements.Add(assignCode);
                     }
-                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, _proxyBaseType.GetMethod(\"{0}\", {3}), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name, typeArrayName));
+                    invocationCode = new CodeSnippetStatement(string.Format("Invocation {2} = new Invocation({1}, this._proxyBaseType.GetMethod(\"{0}\", {3}), this);", methodInfo.Name, v_arguments_Code.Name, invocation_name, typeArrayName));
                 }
 
                 methodCode.Statements.Add(invocationCode);
 
                 invokeMethodCode = new CodeMethodInvokeExpression();
                 invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteBeforeCall" };
-                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("this._proxyProviderBase");
                 invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
                 methodCode.Statements.Add(invokeMethodCode);
 
@@ -980,7 +980,7 @@ this.{0}= {1}; ", item.Name,
 
                 invokeMethodCode = new CodeMethodInvokeExpression();
                 invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteAfterCall" };
-                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("_proxyProviderBase");
+                invokeMethodCode.Method.TargetObject = new CodeSnippetExpression("this._proxyProviderBase");
                 invokeMethodCode.Parameters.Add(new CodeVariableReferenceExpression(invocation_name));
                 methodCode.Statements.Add(invokeMethodCode);
 
