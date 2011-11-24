@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultProxyProviderTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteDomainProxyProviderTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -73,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <Shadow Include="Test References\Clover.Proxy.accessor" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

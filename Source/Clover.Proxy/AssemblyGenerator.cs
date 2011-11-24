@@ -983,8 +983,11 @@ this.{0}= {1}; ", item.Name,
                 }
                 methodCode.Statements.Add(invokeMethodCode);
 
-                CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{0}.ReturnValue", invocation_name)), new CodeVariableReferenceExpression(temp_returnData));
-                methodCode.Statements.Add(as11);
+                if (methodInfo.ReturnType != typeof(void))
+                {
+                    CodeAssignStatement as11 = new CodeAssignStatement(new CodeVariableReferenceExpression(string.Format("{0}.ReturnValue", invocation_name)), new CodeVariableReferenceExpression(temp_returnData));
+                    methodCode.Statements.Add(as11);
+                }
 
                 invokeMethodCode = new CodeMethodInvokeExpression();
                 invokeMethodCode.Method = new CodeMethodReferenceExpression { MethodName = "ExecuteAfterCall" };

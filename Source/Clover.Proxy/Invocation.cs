@@ -5,7 +5,7 @@ namespace Clover.Proxy
 {
     public sealed class Invocation
     {
-        public IEnumerable<object> Arguments { get; private set; }
+        public object[] Arguments { get; private set; }
         public MethodInfo Method { get; private set; }
         public object ProxyObject { get; private set; }
         public object ReturnValue { get; set; }
