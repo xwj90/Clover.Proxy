@@ -55,12 +55,14 @@ namespace UnitTest
             ac.Do("abc");
             ac.Do(5, "abc");
             ac.Do(new object[] { });
+            ac.Name = "Name";
         }
     }
 
 
     public class Normal
     {
+        public virtual string Name { get; set; }
         public virtual string WithDuplexName(bool _hasInit, int _proxyProviderBase, string arguments)
         {
             return "";
