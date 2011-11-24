@@ -66,11 +66,9 @@ namespace UnitTest
         #endregion
 
 
-        /// <summary>
-        ///A test for RemoteDomainProxyProvider Constructor
-        ///</summary>
+
         [TestMethod()]
-        public void CrossDomainSampleTest1()
+        public void CrossDomainSampleTestWithSerializableClass()
         {
 
             ProxyService service = new ProxyService();
@@ -78,12 +76,30 @@ namespace UnitTest
             wrapper.Test();
         }
 
-        internal class TestWrapper
+        public void CrossDomainSampleTestWithMarshalByRefObject()
         {
-            public void Test()
-            {
-                Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
-            }
+
+            ProxyService service = new ProxyService();
+            var wrapper = service.Create<TestWrapper2>();
+            wrapper.Test();
+        }
+
+
+    }
+    [Serializable]
+    public class TestWrapper
+    {
+        public void Test()
+        {
+            Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
+        }
+    }
+
+    public class TestWrapper2 : MarshalByRefObject
+    {
+        public void Test()
+        {
+            Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
         }
     }
 }
