@@ -109,11 +109,15 @@ namespace Clover.Proxy
             sample.Imports.Add(new CodeNamespaceImport("System.Collections"));
             sample.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
             sample.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
+            sample.Imports.Add(new CodeNamespaceImport(type.Namespace));
             foreach (var assembly in dependAssemblies)
             {
-                foreach (Type item in assembly.GetTypes())
+                if (assembly != null)
                 {
-                    sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
+                    foreach (Type item in assembly.GetTypes())
+                    {
+                        sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
+                    }
                 }
             }
 
@@ -162,7 +166,7 @@ namespace Clover.Proxy
                         method.Statements.Add(new CodeSnippetStatement("var temp_returnData_1024="));
                     }
                     var cs = new CodeMethodInvokeExpression();
-                    cs.Method = new CodeMethodReferenceExpression { MethodName = "RemoteRunner<" + type.Name + ">.RemoteT." + item.Name };
+                    cs.Method = new CodeMethodReferenceExpression { MethodName = "RemoteRunner<" + type.Namespace + "." + type.Name + ">.RemoteT." + item.Name };
                     foreach (ParameterInfo input in item.GetParameters())
                     {
                         //Type t = input.ParameterType;
@@ -197,12 +201,12 @@ namespace Clover.Proxy
             cp.ReferencedAssemblies.Add(config.DllCachedPath + Path.GetFileName(type.Assembly.Location));
             //cp.ReferencedAssemblies.Add(DllCachePath + Path.GetFileName(InterfaceAssembly.Location));
             //RefComponents(cp, EntityTypes);
-            foreach (string file in Directory.GetFiles(config.DllCachedPath, "*.dll"))
-            {
-                if (file.ToUpper().StartsWith("Clover."))
-                    continue;
-                cp.ReferencedAssemblies.Add(file);
-            }
+            //foreach (string file in Directory.GetFiles(config.DllCachedPath, "*.dll"))
+            //{
+            //    if (file.ToUpper().StartsWith("Clover."))
+            //        continue;
+            //    cp.ReferencedAssemblies.Add(file);
+            //}
 
 
             cp.OutputAssembly = config.DllCachedPath + type.FullName + ".Local.dll";
@@ -251,9 +255,12 @@ namespace Clover.Proxy
             sample.Imports.Add(new CodeNamespaceImport(typeof(RemoteRunner<>).Namespace));
             foreach (var assembly in dependAssemblies)
             {
-                foreach (Type item in assembly.GetTypes())
+                if (assembly != null)
                 {
-                    sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
+                    foreach (Type item in assembly.GetTypes())
+                    {
+                        sample.Imports.Add(new CodeNamespaceImport(item.Namespace));
+                    }
                 }
             }
 
@@ -362,14 +369,14 @@ try
                     method.Statements.Add(new CodeSnippetStatement(
                                               @"
 }
-catch (Exception ex_1024)
+catch (Exception)// ex_1024)
                     {
-                        Logger.Current.WriteEntry(ex_1024);
-                        if (!(ex_1024.GetType().IsSerializable))
-                        {
+                       // Logger.Current.WriteEntry(ex_1024);
+                       // if (!(ex_1024.GetType().IsSerializable))
+                       // {
                            
-                            throw ErrorService.CreateException<InvalidOperationException>(ErrorCode.InternalCompontentException, ex_1024.GetType().Name, ex_1024.Message, ex_1024.StackTrace);
-                        }
+                       //     throw ErrorService.CreateException<InvalidOperationException>(ErrorCode.InternalCompontentException, ex_1024.GetType().Name, ex_1024.Message, ex_1024.StackTrace);
+                       // }
                         throw;
                     }
 finally
@@ -405,7 +412,8 @@ WindowsIdentity_1024.Impersonate();
             //RefComponents(cp, EntityTypes);
             foreach (var assembly in dependAssemblies)
             {
-                cp.ReferencedAssemblies.Add(assembly.Location);
+                if (assembly != null)
+                    cp.ReferencedAssemblies.Add(assembly.Location);
             }
 
             //foreach (string file in Directory.GetFiles(config.DllCachedPath, "*.dll"))

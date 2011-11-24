@@ -45,9 +45,13 @@ namespace Clover.Proxy
                 this.AfterCall = attribute.AfterCall;
                 this.ProxyType = attribute.ProxyType;
             }
-            if (string.IsNullOrWhiteSpace((this.DllCachedPath)))
+            if (string.IsNullOrWhiteSpace(this.DllCachedPath))
             {
                 this.DllCachedPath = AppDomain.CurrentDomain.BaseDirectory;
+                if (!this.DllCachedPath.EndsWith("\\"))
+                {
+                    this.DllCachedPath += "\\";
+                }
             }
         }
         public static ProxyConfiguration Create(Type type)
@@ -74,9 +78,13 @@ namespace Clover.Proxy
                     }
                 }
 
-                if (string.IsNullOrWhiteSpace((config.DllCachedPath)))
+                if (string.IsNullOrWhiteSpace(config.DllCachedPath))
                 {
                     config.DllCachedPath = AppDomain.CurrentDomain.BaseDirectory;
+                    if (!config.DllCachedPath.EndsWith("\\"))
+                    {
+                        config.DllCachedPath += "\\";
+                    }
                 }
                 return config;
             });

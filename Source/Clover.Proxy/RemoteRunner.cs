@@ -31,22 +31,18 @@ namespace Clover.Proxy
             get
             {
                 T _remoteT = default(T);
-
-                if (_remoteT == null)
+                try
                 {
-                    try
-                    {
-                        _remoteT = (T)Domain.CreateInstanceAndUnwrap(RemoteAssembly.FullName, TypeInformation.GetRemoteProxyClassFullName(typeof(T)));
-                    }
-                    catch
-                    {
-                        if (Domain != null)
-                            AppDomain.Unload(Domain);
-                        InitDomain();
-                        _remoteT = default(T);
-                        throw;
-                    }
+                    _remoteT = (T)Domain.CreateInstanceAndUnwrap(RemoteAssembly.FullName, TypeInformation.GetRemoteProxyClassFullName(typeof(T)));
                 }
+                catch
+                {
+                    if (Domain != null)
+                        AppDomain.Unload(Domain);
+                    InitDomain();
+                    throw;
+                }
+
 
                 return _remoteT;
             }
@@ -58,7 +54,9 @@ namespace Clover.Proxy
             {
                 var config = new ProxyConfiguration();
                 domainInitializer = new Lazy<AppDomain>(InitDomain);
-                EntityAssembly = Assembly.LoadFile(config.DllCachedPath + typeof(T).FullName + ".Entity.dll");
+                string path = config.DllCachedPath + typeof(T).FullName + ".Entity.dll";
+                if (File.Exists(path))
+                    EntityAssembly = Assembly.LoadFile(path);
                 RemoteAssembly = AssemblyGenerator.CreateRemoteAssembly(typeof(T), config, EntityAssembly);
             }
             catch (Exception)
