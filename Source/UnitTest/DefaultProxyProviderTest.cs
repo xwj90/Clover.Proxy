@@ -45,6 +45,10 @@ namespace UnitTest
             ProxyService service = new ProxyService();
             service.BeforeCall += (p) =>
             {
+                if (p.Method.Name == "TestParams")
+                {
+                    Assert.AreEqual(p.Arguments[0].GetType(), typeof(int[]));
+                }
             };
             service.AfterCall += (p) =>
             {
@@ -55,6 +59,7 @@ namespace UnitTest
             ac.Do("abc");
             ac.Do(5, "abc");
             ac.Do(new object[] { });
+            ac.TestParams(1, 2, 3);
             ac.Name = "Name";
         }
     }
@@ -79,6 +84,9 @@ namespace UnitTest
         public virtual object[] Do(object[] a)
         {
             return new object[] { };
+        }
+        public virtual void TestParams(params int[] a)
+        {
         }
     }
 
