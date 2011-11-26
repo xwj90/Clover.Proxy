@@ -12,7 +12,7 @@ using System.IO;
 using System.CodeDom.Compiler;
 namespace Clover.Proxy
 {
-    internal class AssemblyGenerator : ProxyProviderBase
+    internal class AssemblyGenerator
     {
 
         internal static Assembly CreateEntityAssembly(Type type, ProxyConfiguration config, params Assembly[] dependAssemblies)
@@ -747,6 +747,7 @@ this.{0}= {1}; ", item.Name,
             var attrs = type.GetCustomAttributes(typeof(SerializableAttribute), false);
             return attrs != null && attrs.Length > 0;
         }
+
         internal static Assembly CreateLocalClassAssembly(Type type, ProxyConfiguration config)
         {
             string localClassName = TypeInformation.GetLocalProxyClassName(type);

@@ -2,7 +2,7 @@
 
 namespace Clover.Proxy
 {
-    public class ProxyProviderBase
+    public abstract class ProxyProviderBase
     {
         protected ProxyConfiguration ProxyConfig { get; set; }
         public Action<Invocation> BeforeCall { get; set; }
@@ -20,10 +20,7 @@ namespace Clover.Proxy
             }
         }
 
-        public virtual T CreateInstance<T>()
-        {
-            throw new NotImplementedException("you have to override method CreateInstance<T>!");
-        }
+        public abstract T CreateInstance<T>();
 
         public void ExecuteBeforeCall(Invocation invocation)
         {

@@ -16,6 +16,7 @@ namespace Clover.Proxy
     internal class DefaultProxyProvider : ProxyProviderBase
     {
         private static ConcurrentDictionary<Type, Assembly> assemblies = new ConcurrentDictionary<Type, Assembly>();
+        private readonly object createAssemblyLock = new object();
 
         public DefaultProxyProvider(ProxyConfiguration config)
             : base(config)
@@ -29,12 +30,21 @@ namespace Clover.Proxy
                 return (T)Activator.CreateInstance(typeof(T));
             }
             var type = typeof(T);
-            var assembly = assemblies.GetOrAdd(type, (t) =>
-            {
-                return AssemblyGenerator.CreateLocalClassAssembly(type, ProxyConfig);
-            });
+            var assembly = assemblies.GetOrAdd(type, (t) => CreateClassAssembly(t));
             Type proxyType = assembly.GetType(TypeInformation.GetLocalProxyClassFullName(type));
             return (T)Activator.CreateInstance(proxyType, new Object[] { this });
+        }
+
+        private Assembly CreateClassAssembly(Type type)
+        {
+            lock (createAssemblyLock)
+            {
+                Assembly result;
+                if (assemblies.TryGetValue(type, out result)) return result;
+                result = AssemblyGenerator.CreateLocalClassAssembly(type, ProxyConfig);
+                assemblies[type] = result;
+                return result;
+            }
         }
     }
 }
