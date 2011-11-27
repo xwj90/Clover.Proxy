@@ -70,12 +70,26 @@ namespace UnitTest
         [TestMethod()]
         public void CrossDomainSampleTestWithSerializableClass()
         {
+            try
+            {
+                ProxyService service = new ProxyService();
+                var wrapper = service.Create<TestWrapper0>();
+                wrapper.Test();
+                Assert.Fail("should throw exception");
+            }
+            catch (Exception e)
+            {
+            }
+        }
+        [TestMethod()]
+        public void CrossDomainSampleTestWithSerializableClass2()
+        {
 
             ProxyService service = new ProxyService();
-            var wrapper = service.Create<TestWrapper>();
+            var wrapper = service.Create<TestWrapper1>();
             wrapper.Test();
         }
-
+         [TestMethod()]
         public void CrossDomainSampleTestWithMarshalByRefObject()
         {
 
@@ -86,15 +100,27 @@ namespace UnitTest
 
 
     }
-    [Serializable]
+
     [Proxy(ProxyType = ProxyType.Remote)]
-    public class TestWrapper
+    public class TestWrapper0
     {
         public void Test()
         {
             Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
         }
     }
+
+
+    [Serializable]
+    [Proxy(ProxyType = ProxyType.Remote)]
+    public class TestWrapper1
+    {
+        public void Test()
+        {
+            Console.WriteLine(AppDomain.CurrentDomain.FriendlyName);
+        }
+    }
+
     [Proxy(ProxyType = ProxyType.Remote)]
     public class TestWrapper2 : MarshalByRefObject
     {

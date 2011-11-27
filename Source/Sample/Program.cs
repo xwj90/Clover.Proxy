@@ -2,53 +2,47 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Clover.Proxy;
+using System.Reflection.Emit;
 
 namespace Sample
 {
+    internal class Helper
+    {
+        public static T Create<T>(Func<T> func)
+        {
+            // var it = System.Reflection.Emit.DynamicMethod.GetCurrentMethod();
+            return func();
+        }
+    }
+
     internal class Program
     {
         private static void Main(string[] args)
         {
-           
-            ////new design
-            ////simple
-            //var service = new ProxyService();
-            //service.BeforeCall += (p) =>
-            //{
-            //    Console.WriteLine("Before Call");
-            //};
-            //service.AfterCall += (p) =>
-            //{
-            //    Console.WriteLine("After Call"); if (p.ProxiedMethod.Name.IndexOf("Name") != -1) p.ReturnValue = 100;
-            //};
-            //var item = service.Create<TestWrapper2>();
-            //ComplexClass cc = service.Create<ComplexClass>();
-            //cc.TestInt = 5;
-            //cc.TestString = "swc";
-            //cc.TestDateTime = DateTime.Now;
-            //cc.TestIntArray = new int[1];
-            //cc.TestStringArray = new string[1];
-            //cc.TestIntList = new List<int>();
-            //cc.TestStringList = new List<string>();
-            //cc.TestNestClass = new ComplexClass.NestClass();
-            //cc.TestNestClass.A = 5;
+            ProxyService service = new ProxyService();
+            service.BeforeCall = (p) =>
+            {
+                Console.WriteLine("Before Call : " + p.Arguments);
+            };
+            service.AfterCall = (p) =>
+            {
+                Console.WriteLine("After Call : " + p.ReturnValue);
+            };
 
-          
-          
-            //item.Test("111111");
+            var item = service.Create<TestWrapper>();
 
-            //var concurentDictionary = new ConcurrentDictionary<int, int>();
-            ////int v = 0;
+            // method
+            var r1 = item.GetAll(128, "Test String");
+            Console.WriteLine();
 
-            //item.Test("111111");
-            ////   {
-            ////       var key = 1;
-            ////       var returnValue = concurentDictionary.GetOrAdd(key, (p) =>
-            ////           {
-            ////               return Interlocked.Increment(ref v);
-            ////           });
-            ////       Console.WriteLine(returnValue);
-            ////   });
+            // property  可以通过配置设置某个方法，或者某类方法需要调用BeforeCall & AfterCall
+            var r2 = item.Name;
+            Console.WriteLine();
+
+
+
+            var item2 = service.Create<TestWrapper2>();
+            var r3 = item2.Test("test string"); //run method in remote domain //未完全完成
 
         }
     }
@@ -58,7 +52,7 @@ namespace Sample
         {
             public virtual int A { get; set; }
         }
-         
+
 
         public virtual int TestInt { get; set; }
         public virtual string TestString { get; set; }
@@ -68,7 +62,7 @@ namespace Sample
         public virtual List<int> TestIntList { get; set; }
         public virtual List<string> TestStringList { get; set; }
         public virtual NestClass TestNestClass { get; set; }
-         
+
         public ComplexClass()
         {
             TestIntArray = new int[10];
@@ -79,6 +73,7 @@ namespace Sample
         }
     }
 
+    [Serializable]
     public class TestEntity
     {
     }
@@ -86,7 +81,12 @@ namespace Sample
     //[Proxy(DisableAutoProxy = true)]
     public class TestWrapper
     {
-
+        public TestWrapper()
+        {
+        }
+        public TestWrapper(int i, string name)
+        {
+        }
         public virtual List<TestEntity> GetAll(int arguments, string invocation)
         {
             Console.WriteLine("Calling in " + AppDomain.CurrentDomain.FriendlyName);
@@ -103,8 +103,7 @@ namespace Sample
     }
 
     [Proxy(ProxyType = ProxyType.Remote)]
-    [Serializable]
-    public class TestWrapper2
+    public class TestWrapper2 :MarshalByRefObject
     {
         public virtual TestEntity Test(string s)
         {

@@ -207,6 +207,14 @@ namespace Clover.Proxy
             //        continue;
             //    cp.ReferencedAssemblies.Add(file);
             //}
+            foreach (var assembly in dependAssemblies)
+            {
+                if (assembly != null)
+                {
+                    cp.ReferencedAssemblies.Add(assembly.Location);
+                }
+            }
+
 
 
             cp.OutputAssembly = config.DllCachedPath + type.FullName + ".Local.dll";
